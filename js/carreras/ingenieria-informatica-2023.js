@@ -103,7 +103,7 @@ var inginformaticanuevo = [
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Sistemas de Bases de Datos", UC: 5, Tax: "TA-4" },
 	
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Métodos Numéricos", UC: 2, Tax: "TA-9" },
-	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Arquitectura del computador Aplicada", UC: 7, Tax: "TA-9" },
+	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Arquitectura del Computador Aplicada", UC: 5, Tax: "TA-9" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Ciberseguridad Ofensiva", UC: 5, Tax: "TA-9" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Aseguramiento de la Calidad del Software", UC: 4, Tax: "TA-4" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Ingeniería de Requisitos", UC: 4, Tax: "TA-4" },
@@ -112,7 +112,7 @@ var inginformaticanuevo = [
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Innovación y Emprendimiento", UC: 3, Tax: "TA-1" },
 
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Investigación de Operaciones", UC: 5, Tax: "TA-4" },
-	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Inteligencia Artificial: Inteligencia Automático", UC: 4, Tax: "TA-9" },
+	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Inteligencia Artificial: Aprendizaje Automático", UC: 4, Tax: "TA-9" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Ciberseguridad Defensiva", UC: 5, Tax: "TA-9" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Computación en la Nube", UC: 5, Tax: "TA-9" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Desarrollo de Software", UC: 5, Tax: "TA-4" },

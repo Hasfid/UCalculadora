@@ -92,7 +92,7 @@ var ingcivilnuevo = [
 	{ Semestre: "TERCER SEMESTRE", Asignatura: "Ecuaciones Diferenciales Ordinarias", UC: 4, Tax: "TA-4" },
 	{ Semestre: "TERCER SEMESTRE", Asignatura: "Instalaciones Eléctricas", UC: 2, Tax: "TA-4" },
 	{ Semestre: "TERCER SEMESTRE", Asignatura: "Innovación y Emprendimiento", UC: 3, Tax: "TA-1" },
-	
+
 	{ Semestre: "CUARTO SEMESTRE", Asignatura: "Fotogrametría y Sistema de Información Geográfica", UC: 2, Tax: "TA-9" },
 	{ Semestre: "CUARTO SEMESTRE", Asignatura: "Geología", UC: 5, Tax: "TA-4" },
 	{ Semestre: "CUARTO SEMESTRE", Asignatura: "Mecánica de Sólidos II", UC: 5, Tax: "TA-4" },
@@ -101,7 +101,7 @@ var ingcivilnuevo = [
 	{ Semestre: "CUARTO SEMESTRE", Asignatura: "Mecánica de los Fluidos I", UC: 5, Tax: "TA-4" },
 	{ Semestre: "CUARTO SEMESTRE", Asignatura: "Ingeniería Civil y Ambiente", UC: 3, Tax: "TA-4" },
 	{ Semestre: "CUARTO SEMESTRE", Asignatura: "Química", UC: 5, Tax: "TA-4" },
-	
+
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Vías de Comunicación", UC: 5, Tax: "TA-4" },
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Mecánica de Suelos I", UC: 4, Tax: "TA-4" },
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Materiales de Construcción", UC: 3, Tax: "TA-4" },
@@ -109,9 +109,9 @@ var ingcivilnuevo = [
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Estructuras I", UC: 5, Tax: "TA-4" },
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Hidrología Aplicada", UC: 4, Tax: "TA-4" },
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Mecánica de los Fluidos II", UC: 5, Tax: "TA-4" },
-	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Plantas Potabilizadores de Aguas", UC: 4, Tax: "TA-4" },
+	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Plantas Potabilizadoras de Agua", UC: 4, Tax: "TA-4" },
 	{ Semestre: "QUINTO SEMESTRE", Asignatura: "Gerencia e Ingeniería Civil", UC: 3, Tax: "TA-4" },
-	
+
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Proyectos Viales", UC: 4, Tax: "TA-4" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Mecánica de Suelos II", UC: 4, Tax: "TA-4" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Laboratorio de Mecánica de Suelos", UC: 2, Tax: "TA-9" },
@@ -121,19 +121,19 @@ var ingcivilnuevo = [
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Laboratorio de Hidráulica", UC: 3, Tax: "TA-9" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Plantas de Tratamiento de Aguas Residuales Urbanas", UC: 4, Tax: "TA-4" },
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Gestión de Proyectos en Ingeniería Civil", UC: 4, Tax: "TA-4" },
-	
+
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Pavimentos", UC: 4, Tax: "TA-4" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Concreto Reforzado II", UC: 4, Tax: "TA-4" },
-	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Proyecto de Estructura de Acero", UC: 6, Tax: "TA-4" },
-	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Infraestructuras Hidráulicas en Urbanismo", UC: 4, Tax: "TA-4" },
+	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Proyecto de Estructuras de Acero", UC: 6, Tax: "TA-4" },
+	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Infraestructura Hidráulica en Urbanismos", UC: 4, Tax: "TA-4" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Ingeniería Hidráulica I", UC: 6, Tax: "TA-4" },
-	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Laboratorios de Aguas", UC: 3, Tax: "TA-9" },
+	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Laboratorio de Aguas", UC: 3, Tax: "TA-9" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Ética Profesional", UC: 3, Tax: "TA-4" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Seminario de Trabajo de Grado", UC: 2, Tax: "TA-4" },
 
 	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Ingeniería de Fundaciones", UC: 4, Tax: "TA-4" },
 	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Proyecto de Estructuras de Concreto", UC: 5, Tax: "TA-4" },
 	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Ingeniería Hidráulica II", UC: 6, Tax: "TA-4" },
-	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Electiva o Pasantías", UC: 3, Tax: "TA-4" },
+	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Electiva o Pasantía", UC: 3, Tax: "TA-4" },
 	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Trabajo de Grado", UC: 10, Tax: "TA-4" },
 ];
