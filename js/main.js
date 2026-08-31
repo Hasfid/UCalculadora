@@ -561,17 +561,20 @@ function totalizacion() {
 	ucpagar = 0;
 
 	//descuentos segun carrera
-	if (carrera.includes("educacion") || carrera.includes("letras") || carrera.includes("filosofia")) {
+	if (carrera.includes("educacion") || carrera.includes("letras")) {
 		//Aplicamos 30% de descuento >>
 		vrealUC = valorUC * 0.7;
+	} else if (carrera.includes("filosofia")) {
+		//Aplicamos 60% de descuento >>
+		vrealUC = valorUC * 0.4;
 	}
 
 	//descuento por sede
 	switch (sede) {
 		case "g":
-			//Guayana 10% descuento
+			//Guayana 5% descuento
 			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
-			vrealUC *= 0.9;
+			vrealUC *= 0.95;
 
 			break;
 		case "tq":
@@ -726,13 +729,22 @@ function getUCMes(mes) {
 
 function GetMontoTarifa(fecha) {
 	let aux = ucpagar;
+
+	//descuentos segun carrera
+	if (carrera.includes("educacion") || carrera.includes("letras")) {
+		aux *= 0.7;
+	} else if (carrera.includes("filosofia")) {
+		aux *= 0.4;
+	}
+
 	switch (sede) {
 		case "g":
+			//Guayana 5% descuento
+			aux *= 0.95;
+			break;
 		case "tq":
-			//Guayana  /Los teques 20% descuento
-			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
+			//Los teques 20% descuento
 			aux *= 0.8;
-
 			break;
 	}
 
@@ -741,11 +753,19 @@ function GetMontoTarifa(fecha) {
 
 function GetMontoTarifaMes(mes) {
 	let aux = ucpagar;
+	
+	//descuentos segun carrera
+	if (carrera.includes("educacion") || carrera.includes("letras")) {
+		aux *= 0.7;
+	} else if (carrera.includes("filosofia")) {
+		aux *= 0.4;
+	}
+
 	switch (sede) {
 		case "g":
-			//Guayana 10% descuento
+			//Guayana 5% descuento
 			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
-			aux *= 0.9;
+			aux *= 0.95;
 
 			break;
 		case "tq":
