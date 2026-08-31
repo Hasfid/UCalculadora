@@ -690,7 +690,12 @@ function getUCfecha(fecha, force_periodo = null) {
 	//console.log("perioact", perioact, "month", month, "monthMapping", monthMapping[month]);
 	if (aux_periodo != 1) {
 		//semestre
-		uc = dataux?.variacion[monthMapping[month] - 1];
+		let cuotaIndex = monthMapping[month];
+		if (cuotaIndex == null) {
+			uc = dataux?.base;
+		} else {
+			uc = dataux?.variacion[cuotaIndex - 1];
+		}
 	}
 
 	/*if (dataux.variacion) {
@@ -708,6 +713,9 @@ function getUCfecha(fecha, force_periodo = null) {
 			}
 		}
 	}*/
+	if (carrera && carrera.includes("tsu")) {
+		return "12.50";
+	}
 	console.warn("getUCfecha: ", uc);
 	return Number(uc).toFixed(2);
 }
@@ -724,6 +732,9 @@ function getUCMes(mes) {
 		uc = dataux.variacion[month - 1];
 	}
 
+	if (carrera && carrera.includes("tsu")) {
+		return "12.50";
+	}
 	return Number(uc).toFixed(2);
 }
 
@@ -1138,17 +1149,17 @@ function generarPagos() {
                 <div class="box-info">
                     <div><span class="subtitle-table">Estudiante regular (+DI+CI)</span></div>
                     <div>
-                        <span class="bs">${formatNumber.new((6 * valorUC + totalbs * 5 * DESCUENTO_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 5 * DESCUENTO_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
                   
-                        <span class="usd">${formatNumber.new(6 * valorUC + totalbs * 5 * DESCUENTO_TOTAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 5 * DESCUENTO_TOTAL, `USD `, true)}</span>
                     </div>
                 </div>
                 <div class="box-info">
                     <div><span class="subtitle-table">Estudiante nuevo (+DI+CI)</span></div>
                     <div>
-                        <span class="bs">${formatNumber.new((10 * valorUC + totalbs * 5 * DESCUENTO_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 5 * DESCUENTO_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
                     
-                        <span class="usd">${formatNumber.new(10 * valorUC + totalbs * 5 * DESCUENTO_TOTAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 5 * DESCUENTO_TOTAL, `USD `, true)}</span>
                     </div>
                 </div>
             </div>-->
@@ -1166,16 +1177,16 @@ function generarPagos() {
                     <div><span class="subtitle-table">1ERA CUOTA</span></div>
                     <div class="indent-10">
                         <span class="subtitle-table">Estudiante regular (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((6 * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
                        
-                        <span class="usd">${formatNumber.new(6 * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
                     </div>
 
                     <div class="indent-10">
                         <span class="subtitle-table">Estudiante nuevo (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((10 * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
                       
-                        <span class="usd">${formatNumber.new(10 * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
                     </div>
                 </div>
                 <div class="box-info">
@@ -1203,15 +1214,15 @@ function generarPagos() {
                     <div><span class="subtitle-table">CUOTA INICIAL (+DI)</span></div>
                     <div class="indent-10">
                     <span class="subtitle-table">Estudiante regular (+DI)</span><br />
-                    <span class="bs">${formatNumber.new((6 * valorUC + totalbs * 1) * valorBCV, `Bs `, true)}</span> <br />
+                    <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 1) * valorBCV, `Bs `, true)}</span> <br />
                  
-                    <span class="usd">${formatNumber.new(6 * valorUC + totalbs * 1, `USD `, true)}</span>
+                    <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 1, `USD `, true)}</span>
                 </div>
                     <div class="indent-10">
                         <span class="subtitle-table">Estudiante nuevo (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((10 * valorUC + totalbs * 1) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 1) * valorBCV, `Bs `, true)}</span> <br />
                      
-                        <span class="usd">${formatNumber.new(10 * valorUC + totalbs * 1, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 1, `USD `, true)}</span>
                     </div>
                 </div>
                 <div class="box-info">
@@ -1425,18 +1436,18 @@ function getDIhtml() {
         <div class="box-info">
             <div><span class="subtitle-table">Estudiante regular</span></div>
             <div>
-                <span class="bs">${formatNumber.new(6 * valorUC * valorBCV, `Bs `, true)}</span> <br />
+                <span class="bs">${formatNumber.new(DI_REGULAR * valorUC * valorBCV, `Bs `, true)}</span> <br />
            
-                <span class="usd">${formatNumber.new(6 * valorUC, `USD `, true)}</span>
+                <span class="usd">${formatNumber.new(DI_REGULAR * valorUC, `USD `, true)}</span>
             </div>
         </div>
 
         <div class="box-info">
             <div><span class="subtitle-table">Estudiante nuevo</span></div>
             <div>
-                <span class="bs">${formatNumber.new(10 * valorUC * valorBCV, `Bs `, true)}</span> <br />
+                <span class="bs">${formatNumber.new(DI_NUEVO * valorUC * valorBCV, `Bs `, true)}</span> <br />
           
-                <span class="usd">${formatNumber.new(10 * valorUC, `USD `, true)}</span>
+                <span class="usd">${formatNumber.new(DI_NUEVO * valorUC, `USD `, true)}</span>
             </div>
         </div>
     </div>    
@@ -1452,9 +1463,9 @@ function getConfDIhtml() {
         <div class="box-info">
             <div><span class="subtitle-table">Estudiantes</span></div>
             <div>
-                <span class="bs">${formatNumber.new(2.5 * getUCMes(4) * valorBCV, `Bs `, true)}</span> <br />
+                <span class="bs">${formatNumber.new(DI_CONFIRM * getUCMes(4) * valorBCV, `Bs `, true)}</span> <br />
             
-                <span class="usd">${formatNumber.new(2.5 * getUCMes(4), `USD `, true)}</span>
+                <span class="usd">${formatNumber.new(DI_CONFIRM * getUCMes(4), `USD `, true)}</span>
             </div>
         </div>
     </div>  
