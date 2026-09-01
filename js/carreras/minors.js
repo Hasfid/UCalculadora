@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 let minors = [
 	{ Semestre: "(MINOR) DERECHO INTERNACIONAL PÚBLICO", Asignatura: "Teoría General del Derecho II", UC: 6, Tax: "TA‐1" },
 	{ Semestre: "(MINOR) DERECHO INTERNACIONAL PÚBLICO", Asignatura: "Derecho Constitucional General II: Sistema Político, Sistema de Gobierno y Forma de Estado", UC: 4, Tax: "TA‐1" },

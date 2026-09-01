@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var ingcivil = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Representación Gráfica", UC: 3, Tax: "TA-9" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Algebra y Trigonometría", UC: 5, Tax: "TA-4" },
@@ -69,6 +75,7 @@ var ingcivil = [
 	{ Semestre: "OCTAVO SEMESTRE", Asignatura: "Trabajo de Grado", UC: 19, Tax: "TA-4" },
 ];
 
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var ingcivilnuevo = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Representación Gráfica", UC: 3, Tax: "TA-4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Mecánica", UC: 6, Tax: "TA-4" },

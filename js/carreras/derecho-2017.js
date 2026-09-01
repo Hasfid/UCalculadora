@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var derecho = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Comprensión Lectora y Redacción", UC: 3, Tax: "TA‐8" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Orígenes del Derecho y Evolución Posterior", UC: 3, Tax: "TA‐1" },
@@ -99,6 +105,7 @@ var derecho = [
 	{ Semestre: "DECIMO SEMESTRE", Asignatura: "Clínica Jurídica II", UC: 2, Tax: "TA‐9" },
 ];
 
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var derechonuevopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Competencia Textual en Español", UC: 5, Tax: "TA‐6" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Derecho Civil Personas", UC: 6, Tax: "TA‐1" },

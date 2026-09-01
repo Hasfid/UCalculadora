@@ -1,42 +1,120 @@
+/**
+ * @file main.js
+ * @description Módulo principal y núcleo lógico de UCalculadora.
+ * Contiene la configuración global parametrizable (APP_CONFIG), el estado general de la calculadora,
+ * y las funciones centrales que orquestan el cálculo de las Unidades de Crédito (UC). 
+ * También se encarga de la generación dinámica de las tablas de pago (tanto regulares como minors),
+ * el cálculo de tarifas, variaciones según periodos, y la inyección de los resultados en el DOM.
+ */
 /* SISTEMA GENERAL */
-let valorUC = 0;
-let vrealUC = valorUC;
-let valorBCV = 0;
-let visualUC = 0;
-let ucbase = 0;
-let ucbaseMinor = 0;
-let uctotal = 0;
-let uctotalMinor = 0;
-let ucpagar = 0;
-let totalbs = 0;
-let totalbsMinor = 0;
-let ucrec = 0;
+/**
+ * CONFIGURACION PARAMETRIZABLE GENERAL
+ * Esta seccion concentra valores que cambian por politica academica, sede, taxonomia, integraciones y elementos DOM.
+ * Para mantenimiento, modificar primero estos parametros antes de tocar formulas dentro de funciones.
+ */
+const APP_CONFIG = {
+	/**
+	 * Valores base del sistema
+	 * Define estados iniciales y modos de operacion usados por la calculadora.
+	 */
+	VALOR_INICIAL_MONTO: 0,
+	MODO_UC: "UC",
+	MODO_FAB: "FAB",
 
+	/**
+	 * Limites de cooperacion economica
+	 * Controlan cuantas UC entran dentro de la cobertura antes de cobrar excedentes completos.
+	 */
+	LIMITE_PROPORCIONAL_UC: 27,
+	LIMITE_BECA_UC: 30,
+	LIMITE_FAB_UC: 30,
+
+	/**
+	 * Descuentos por carrera
+	 * Estos factores reducen el valor real de la UC antes de calcular el monto final.
+	 */
+	DESCUENTO_CARRERA_APOYO: 0.7,
+	DESCUENTO_FILOSOFIA: 0.4,
+
+	/**
+	 * Valores de taxonomias y modalidad
+	 * FACTOR_UC_MODALIDAD_VIRTUAL ajusta UC academicas en materias virtuales o semipresenciales.
+	 * RECARGO_TAXONOMIA_MEDIA aplica a taxonomias 7 y 8 para aumentar UC equivalentes cobradas.
+	 * RECARGO_TAXONOMIA_ALTA aplica a taxonomia 9 para aumentar UC equivalentes cobradas.
+	 */
+	FACTOR_UC_MODALIDAD_VIRTUAL: 0.72,
+	RECARGO_TAXONOMIA_MEDIA: 1.1,
+	RECARGO_TAXONOMIA_ALTA: 1.15,
+
+	/**
+	 * Integraciones externas
+	 * URL_BCV alimenta los montos en bolivares de las tablas visibles.
+	 */
+	URL_BCV: "https://madot10.github.io/bot-dolar-bcv/uctoday.json",
+
+	/**
+	 * Identificadores DOM
+	 * Mantener sincronizados con index.html porque las funciones escriben directamente sobre estos nodos.
+	 */
+	ID_PAGOS: "pagos",
+	ID_PAGO_MINOR: "pagoMinor",
+	ID_ALERTA: "alertmsg"
+};
+
+/**
+ * ESTADO GLOBAL DE CALCULO
+ * Estas variables se comparten entre main.js, modals.js, fab.js, data.js y plantillas HTML heredadas.
+ * No renombrarlas sin actualizar llamadas onclick y referencias desde plantillas evaluadas.
+ */
+
+/** Valores monetarios y UC acumuladas durante el calculo activo. */
+let valorUC = APP_CONFIG.VALOR_INICIAL_MONTO;
+let vrealUC = valorUC;
+let valorBCV = APP_CONFIG.VALOR_INICIAL_MONTO;
+let visualUC = APP_CONFIG.VALOR_INICIAL_MONTO;
+let ucbase = APP_CONFIG.VALOR_INICIAL_MONTO;
+let ucbaseMinor = APP_CONFIG.VALOR_INICIAL_MONTO;
+let uctotal = APP_CONFIG.VALOR_INICIAL_MONTO;
+let uctotalMinor = APP_CONFIG.VALOR_INICIAL_MONTO;
+let ucpagar = APP_CONFIG.VALOR_INICIAL_MONTO;
+let totalbs = APP_CONFIG.VALOR_INICIAL_MONTO;
+let totalbsMinor = APP_CONFIG.VALOR_INICIAL_MONTO;
+let ucrec = APP_CONFIG.VALOR_INICIAL_MONTO;
+
+/** Selecciones hechas por el usuario desde los modales de la pantalla principal. */
 let sede;
 let carrera;
 let materias;
 let coop;
 let cober;
 
-let limitProp = 27;
-let limitBeca = 30;
-let limitFab = 30;
+/** Limites editables que se reinician al cambiar entre modo UC y modo FAB. */
+let limitProp = APP_CONFIG.LIMITE_PROPORCIONAL_UC;
+let limitBeca = APP_CONFIG.LIMITE_BECA_UC;
+let limitFab = APP_CONFIG.LIMITE_FAB_UC;
 
+/** Fecha y periodo usados para elegir valor UC y plantilla de pagos. */
 let hoy = new Date();
-let mode = "UC";
-
-//PERIODOS TABLA SYSTEM
+let mode = APP_CONFIG.MODO_UC;
 let diaAct = hoy.getDate();
 let mesAct = hoy.getMonth() + 1;
 let perBtnActivo = "";
 let perActivo = 0;
-
 let templateSelect = "";
 let templateSelectMinor = "";
 
+/** Textos informativos reutilizados por modales de ayuda de la interfaz. */
 let infoTXT = `Materias Semi-Presenciales como electivas pueden variar su modalidad (TAXONOMIA) <br> Las materias de Comprensión de Contenidos en Inglés y Producción de Contenidos en Inglés aunque no aparezca el cambio en la malla curricular, el cambio de taxonomía de T6 a TA8 afecta a todos los alumnos <br> <a href="https://www.ucab.edu.ve/informacion-institucional/secretaria/servicios/plan-de-estudios/"> <br> Más información de pensums </a>`;
 //FUNCIONES
 
+
+/**
+ * Reinicia el estado global de la calculadora y prepara la vista según el modo solicitado (Cálculo UC o Apadrinamiento FAB).
+ * Restablece las variables matemáticas y limpia la memoria de selecciones del usuario (sede, carrera, etc) para un nuevo cálculo en blanco.
+ * 
+ * @param {string} md - Modo de operación objetivo (ej. 'UC' para matrícula regular, 'FAB' para donaciones).
+ * @returns {void} Modifica variables globales e invoca limpiezas de tablas en el DOM.
+ */
 function initVar(md) {
 	LoadUC();
 
@@ -54,9 +132,9 @@ function initVar(md) {
 	coop = "";
 	cober = "";
 
-	limitProp = 27;
-	limitBeca = 30;
-	limitFab = 30;
+	limitProp = APP_CONFIG.LIMITE_PROPORCIONAL_UC;
+	limitBeca = APP_CONFIG.LIMITE_BECA_UC;
+	limitFab = APP_CONFIG.LIMITE_FAB_UC;
 
 	cleanTabla();
 	cleanTableMat();
@@ -64,7 +142,7 @@ function initVar(md) {
 
 	if (md == "FAB") {
 		//Codigo desactivado por autoridades
-		mode = "FAB";
+		mode = APP_CONFIG.MODO_FAB;
 
 		//sede
 		//sedeSelect('mtb');
@@ -74,18 +152,27 @@ function initVar(md) {
 		//coop = 'fab';
 		//cober = 10; //min
 
+		// Log original mantenido para depuración de estados (Mantenimiento)
 		console.log("inicializando FAB");
 	} else {
-		mode = "UC";
+		mode = APP_CONFIG.MODO_UC;
 		//Volvemos sede text a la normalidad
 		let span = document.getElementById("sName");
 		let parentElem = span.parentElement;
 		span.innerHTML = "SEDE";
 		parentElem.children[2].style.display = "block";
+		// Log original mantenido para depuración de estados (Mantenimiento)
 		console.log("inicializando UC");
 	}
 }
 
+
+/**
+ * Punto de entrada principal al cargar la página en el navegador.
+ * Inicializa el sistema calculando el periodo vigente, consultando la tasa BCV del día y renderizando el banner inicial.
+ * 
+ * @returns {void} No retorna valor explícito, configura los estados iniciales, oculta el cargador y muestra el menú principal.
+ */
 window.onload = () => {
 	//Cargamos UC visual
 	InicializarPeriodoSys();
@@ -112,6 +199,13 @@ window.onload = () => {
 };
 
 /* INICIALIZADOR DE ACORDION TABLE */
+
+/**
+ * Inicializa la funcionalidad interactiva de los menús colapsables (acordeones) incrustados dentro de las tablas de desglose de pagos.
+ * Permite al estudiante desglosar sus mensualidades sin recargar la vista general.
+ * 
+ * @returns {void} Inyecta listeners de tipo 'click' a los elementos HTML de clase 'box-btn'.
+ */
 function iniciarlizarAcordionesPagos() {
 	const acc = document.getElementsByClassName("box-btn");
 
@@ -130,6 +224,14 @@ function iniciarlizarAcordionesPagos() {
 }
 
 /* SISTEMA PERIODO TABLA*/
+
+/**
+ * Inicializa la lógica de selección de periodos académicos (semestre regular, verano, etc), filtrando opciones.
+ * Revisa el catálogo oficial (ucByPeriodo) y habilita en pantalla únicamente los periodos para los cuales hay tarifas declaradas.
+ * 
+ * @param {number} perioObligatorio - Si es distinto de cero, fuerza a la UI a iniciar en un periodo específico ignorando la estacionalidad actual.
+ * @returns {void} Modifica los botones de la clase 'per', asignándoles eventos de cambio de periodo ('changePeriodo').
+ */
 function InicializarPeriodoSys(perioObligatorio = 0) {
 	if (perioObligatorio == 0) {
 		//if (
@@ -193,6 +295,12 @@ function InicializarPeriodoSys(perioObligatorio = 0) {
 	}
 }
 
+
+/**
+ * Muestra el contenedor visual que permite al estudiante alternar entre periodos históricos o futuros.
+ * 
+ * @returns {void} Cambia el atributo display del contenedor 'per' a 'block'.
+ */
 function showPeriodo() {
 	/*if (perActivo == 1) {
 		//PERIODO 1
@@ -204,7 +312,17 @@ function showPeriodo() {
 	document.getElementById("per").style.display = "block";
 }
 
+
+/**
+ * Ejecuta la transición de negocio cuando el usuario cambia el periodo académico evaluado (ej. pasa de Semestre a Verano).
+ * Refresca la tarifa UC para hacer match con el nuevo periodo e invoca el recálculo total de la matrícula para mantener la tabla viva.
+ * 
+ * @param {string} idElem - ID interno del botón presionado en la UI, usado para manejo de clases activas.
+ * @param {number} newPeriodo - Código representativo del periodo seleccionado.
+ * @returns {void} Actualiza banderas globales, cambia el template heredado y dispara 'calcularMatricula()'.
+ */
 function changePeriodo(idElem, newPeriodo) {
+	// Log original mantenido para seguimiento de cambios de estado (Mantenimiento)
 	console.info("#Periodo cambiado: ", newPeriodo);
 	//Activamos boton
 	if (perBtnActivo != "") document.getElementById(perBtnActivo).classList.remove("active");
@@ -220,6 +338,12 @@ function changePeriodo(idElem, newPeriodo) {
 	calcularMatricula();
 }
 
+
+/**
+ * Calcula algorítmicamente qué tipo de periodo académico rige hoy basándose en el calendario general de la universidad.
+ * 
+ * @returns {number} Retorna 2 si el mes actual se considera semestre regular, o 1 si se trata de temporada de verano.
+ */
 function getActualPeriodo() {
 	let f = new Date(hoy);
 	let month = f.getMonth() + 1;
@@ -233,6 +357,13 @@ function getActualPeriodo() {
 	}
 }
 
+
+/**
+ * Traduce el índice visual del botón del periodo a su código de base de datos interno.
+ * 
+ * @param {number} Nbtn - Índice secuencial del botón de periodo (0 para verano, >0 para semestres).
+ * @returns {number} 1 si representa verano o 2 si representa semestre regular.
+ */
 function getPeriodoCode(Nbtn) {
 	if (Nbtn == 0) {
 		//verano
@@ -243,6 +374,13 @@ function getPeriodoCode(Nbtn) {
 	}
 }
 
+
+/**
+ * Mapea el índice del botón al identificador semántico del periodo utilizado para extraer tarifas del diccionario 'ucByPeriodo'.
+ * 
+ * @param {number} Nbtn - Índice posicional del botón seleccionado.
+ * @returns {string} Cadena 'verano' o 'semestre' utilizada como llave en diccionarios externos.
+ */
 function getPeriodoName(Nbtn) {
 	if (Nbtn == 0) {
 		//verano
@@ -253,6 +391,15 @@ function getPeriodoName(Nbtn) {
 	}
 }
 
+
+/**
+ * Generador condicional de códigos históricos (legacy) de periodos académicos según el mes actual y desplazamientos anuales.
+ * Creado originalmente para navegar lógicamente entre semestres pasados en versiones antiguas del frontend.
+ * 
+ * @param {number} Nper - Periodo primario evaluado (1 o 2).
+ * @param {number} Nbtn - Posición relativa en la botonera de navegación.
+ * @returns {string} Código alfanumérico sintetizado para búsquedas históricas (ej. '226' para semestre 2 del año 2026).
+ */
 function genPeriodoCode(Nper, Nbtn) {
 	if (Nper == 1) {
 		//PERIODO 1
@@ -289,6 +436,14 @@ function genPeriodoCode(Nper, Nbtn) {
 /* END SISTEMA PERIODO TABLA*/
 
 /* SISTEMA MENU */
+
+/**
+ * Coordinador central de la navegación tipo SPA (Single Page Application).
+ * Oculta y revela las secciones principales (Menú, Calculadora, FAB, Histórico) y emite los reportes de telemetría hacia Google Analytics.
+ * 
+ * @param {string} name - Nombre interno de la vista solicitada (ej. 'ucalculadora', 'fab', 'historico').
+ * @returns {void} Altera los estilos de visualización de los contenedores maestros, cambia el 'title' y envía métricas de uso.
+ */
 function OpenDiv(name) {
 	let elems_menu = document.getElementsByClassName("emenu");
 	//ocultamos todos
@@ -348,6 +503,13 @@ function OpenDiv(name) {
 /* SISTEMA GENERAL */
 
 //Google analytics togle
+
+/**
+ * Activa o bloquea temporalmente el envío de telemetría a Google Analytics (útil durante el testing local).
+ * 
+ * @param {boolean} value - Si es true, Google Analytics registrará eventos; false bloquea envíos con 'ga-disable'.
+ * @returns {void} Configura directamente variables inyectadas de gtag y emite consola de depuración local.
+ */
 function setGa(value) {
 	let a = "Set: " + value;
 	gtag("event", "ToggleGA", {
@@ -359,6 +521,16 @@ function setGa(value) {
 	console.log("Establecido ga-disable como: ", value);
 }
 
+
+/**
+ * Envía trazas y eventos genéricos de negocio a Google Analytics (GA4/UA).
+ * Se emplea para estudiar qué carreras se buscan más, qué funciones se abren y si el usuario prefiere sedes foráneas.
+ * 
+ * @param {string} act - Acción de negocio (ej. 'CarreraSelect', 'MenuOpen').
+ * @param {string} typeInter - Tipo de interacción usada como prefijo para categoría ('UC', 'FAB', etc).
+ * @param {string} lb - Etiqueta descriptiva (label) opcional (ej. Nombre específico de carrera).
+ * @returns {void} Llama al objeto global gtag push de Google.
+ */
 function OnClickGa(act, typeInter, lb) {
 	//si existe etiqueta hacer:
 	//console.log('LB', lb)
@@ -376,15 +548,29 @@ function OnClickGa(act, typeInter, lb) {
 	}
 }
 
+
+/**
+ * Vacía los contenedores de las tablas de pago regulares y de Minor, removiendo también cualquier mensaje de error.
+ * Obligatorio llamar a esta función cuando se detecta un cambio en las variables principales para forzar una re-evaluación total.
+ * 
+ * @returns {void} Sobreescribe el contenido HTML de los contenedores de pago con un string vacío.
+ */
 function cleanTabla() {
-	document.getElementById("pagos").innerHTML = "";
-	document.getElementById("pagoMinor").innerHTML = "";
-	document.getElementById("alertmsg").style.display = "none";
+	document.getElementById(APP_CONFIG.ID_PAGOS).innerHTML = "";
+	document.getElementById(APP_CONFIG.ID_PAGO_MINOR).innerHTML = "";
+	document.getElementById(APP_CONFIG.ID_ALERTA).style.display = "none";
 }
 
+
+/**
+ * Función validadora y disparadora de cálculos central.
+ * Comprueba que el usuario haya establecido las tres variables de negocio más importantes (Sede, Carrera y Tipo de Ayuda Económica) antes de proceder con rutinas matemáticas pesadas.
+ * 
+ * @returns {void} Si todo es válido arranca 'totalizacion()'; si faltan datos emite un 'alert' nativo para bloquear el flujo.
+ */
 function calcularMatricula() {
 	if (sede && carrera && coop) {
-		document.getElementById("alertmsg").style.display = "none";
+		document.getElementById(APP_CONFIG.ID_ALERTA).style.display = "none";
 		totalizacion();
 		showPeriodo();
 	} else {
@@ -392,9 +578,20 @@ function calcularMatricula() {
 	}
 }
 
+/**
+ * Utilidad de formato numerico para mostrar montos con separadores venezolanos.
+ * separador controla miles y sepDecimal controla decimales.
+ */
 let formatNumber = {
+	/** Separador de miles mostrado en montos finales. */
 	separador: ".",
+	/** Separador decimal mostrado en montos finales. */
 	sepDecimal: ",",
+	/**
+	 * Aplica separadores al numero recibido usando el simbolo configurado temporalmente.
+	 * @param {number|string} num Numero que se desea formatear para la interfaz.
+	 * @returns {string} Numero formateado con simbolo y separadores.
+	 */
 	formatear: function (num) {
 		num += "";
 		var splitStr = num.split(".");
@@ -406,6 +603,13 @@ let formatNumber = {
 		}
 		return this.simbol + splitLeft + splitRight;
 	},
+	/**
+	 * Configura simbolo y precision antes de formatear el monto visible.
+	 * @param {number|string} num Numero base a mostrar.
+	 * @param {string} simbol Prefijo monetario como USD o Bs.
+	 * @param {boolean} IsProc Indica si debe forzar dos decimales antes de formatear.
+	 * @returns {string} Monto listo para inyectar en pantalla.
+	 */
 	new: function (num, simbol, IsProc) {
 		this.simbol = simbol || "";
 		if (IsProc) {
@@ -416,30 +620,36 @@ let formatNumber = {
 	},
 };
 
+
+/**
+ * Extrae la tarifa base estipulada para la UC desde el diccionario de periodos académicos, ajustándola en tiempo real al escenario actual.
+ * 
+ * @returns {number} Retorna el monto base monetizado (en divisas) y paralelamente lo actualiza en la variable global 'visualUC' y 'valorUC'.
+ */
 function LoadUC() {
 	//let dataux = periodo[perioact];
 	//console.warn("LoadUC perioact: ", perioact);
-	//let dataux = perioact == 1 ? ucByPeriodo["verano"] : ucByPeriodo["semestre"];
+	//let dataux = perioact == 1 usando verano y en caso contrario semestre;
 	//let uc = dataux.base;
 	uc = getUCfecha(hoy, perioact);
 	valorUC = uc;
 	//Recorremos si existe lista de variacion
 	/*
-        if(dataux.variacion){
-            let timecmp;
-            for (let i = 0; i < dataux.variacion.length; i++) {
-                timecmp = new Date(dataux.variacion[i][0]);
-                    if(today.getTime() > timecmp.getTime()){
-                        //Hoy es mayor que una fecha de variacion
-                        //aplicar sobre base
-                        uc = uc * (1+(dataux.variacion[i][1]/100));
-                    }else{
-                        //si variacion es mayor
-                        //aun no ha llegado esa fecha
-                        break;
-                    }
-            }
-    }*/
+		if(dataux.variacion){
+			let timecmp;
+			for (let i = 0; i < dataux.variacion.length; i++) {
+				timecmp = new Date(dataux.variacion[i][0]);
+					if(today.getTime() > timecmp.getTime()){
+						//Hoy es mayor que una fecha de variacion
+						//aplicar sobre base
+						uc = uc * (1+(dataux.variacion[i][1]/100));
+					}else{
+						//si variacion es mayor
+						//aun no ha llegado esa fecha
+						break;
+					}
+			}
+	}*/
 
 	//console.log(uc);
 	visualUC = uc;
@@ -447,8 +657,14 @@ function LoadUC() {
 }
 
 //Encargado de obtener valor BCV
+
+/**
+ * Se conecta con la API externa del bot BCV para consultar asincrónicamente el valor oficial del dólar de hoy.
+ * 
+ * @returns {void} Al resolverse la promesa de 'fetch', actualiza silenciosamente la variable global 'valorBCV' que usarán las tablas finales de bolívares.
+ */
 function GetValorBCV() {
-	fetch("https://madot10.github.io/bot-dolar-bcv/uctoday.json")
+	fetch(APP_CONFIG.URL_BCV)
 		.then((response) => {
 			return response.json();
 		})
@@ -459,11 +675,20 @@ function GetValorBCV() {
 }
 
 //Retorna jsonData de carrera
+
+/**
+ * Transforma un texto genérico de carrera ingresado por UI (con espacios, mayúsculas, etc.) en un objeto de datos JSON oficial de malla curricular.
+ * Busca la equivalencia en el objeto global de variables cargadas en memoria.
+ * 
+ * @param {string} tx - String representativo del nombre de la carrera según el botón del menú.
+ * @returns {Array} Retorna el objeto/array curricular que contiene las materias y UC oficiales definidas.
+ */
 function GetJsonDataMaterias(tx) {
 	tx = tx.replace(/\s/g, "");
 	tx = tx.replace(/\n/g, "");
 	tx = tx.toLowerCase();
 
+	// Log original para validación de transformaciones de texto (Mantenimiento)
 	console.log("GetJsonDataMaterias", tx);
 
 	//console.log("TX " + tx);
@@ -471,6 +696,15 @@ function GetJsonDataMaterias(tx) {
 }
 
 //Arregla uc cambiado en el archivo debido al V y SP
+
+/**
+ * Ajusta la cantidad de UC académicas que un estudiante "paga" cuando la modalidad no es tradicional.
+ * En clases Virtuales (V) o Semi-Presenciales (SP), aplica el factor reductor (ej. 0.72) definido en las reglas académicas del rectorado.
+ * 
+ * @param {string} taxNum - Código en crudo de la taxonomía (ej. 'T4(SP)').
+ * @param {number|string} ucnum - UC base oficial de la materia.
+ * @returns {number} UC definitivas equivalentes (a ser pagadas) ya ponderadas por el factor de presencialidad, redondeado al entero.
+ */
 function FixUC(taxNum, ucnum) {
 	//console.log(taxNum);
 
@@ -478,7 +712,7 @@ function FixUC(taxNum, ucnum) {
 		if (taxNum.includes("(V)") || taxNum.includes("(SP)")) {
 			//si es una modalida sp y v
 			//descontamos el 0.72
-			let k = Number(ucnum) * 0.72;
+			let k = Number(ucnum) * APP_CONFIG.FACTOR_UC_MODALIDAD_VIRTUAL;
 			//console.log("K2 " + k);
 			return Math.round(k);
 		} else {
@@ -489,18 +723,30 @@ function FixUC(taxNum, ucnum) {
 	return 0;
 }
 
+
+/**
+ * Implementa el cálculo de recargos del negocio basados en Taxonomía y Equivalencias Técnicas (UCE).
+ * Materias puramente virtuales descuentan costos, pero las de taxonomía experimental alta (7,8,9) elevan el cobro multiplicando por factores de infraestructura.
+ * 
+ * @param {number} uc - UC académicas formales (créditos regulares).
+ * @param {string} tax - Categoría o Taxonomía literal de la materia (del 1 al 9).
+ * @param {number|undefined} uce - UC Equivalente explícita (si la hay), que sobre-escribe el valor 'uc' académico al momento del cobro.
+ * @returns {number} El monto equivalente en Unidades de Crédito cobrables tras aplicar factores técnicos y recargos.
+ */
 function UCrecargo(uc, tax, uce) {
+	// taxN conserva solo el numero de taxonomia para decidir si la materia tiene recargo.
 	let taxN = tax.replace(/^\D+/g, "");
 	let xuc = 0;
 
 	if (uce) {
-		//console.log("definido");
+		// UCE permite que una materia cobre UC equivalentes distintas a sus UC academicas.
 		xuc = uce;
 	} else {
 		//console.log("no definido");
 		xuc = uc;
 	}
 	if (tax.includes("(V)") || tax.includes("(SP)")) {
+		// Las modalidades virtuales y semipresenciales ya llegan ajustadas desde la data academica.
 		//if (taxN == "7" || taxN == "8" || taxN == "9") {
 		//Recargo 20%
 		//return uc * 1.2;
@@ -531,14 +777,14 @@ function UCrecargo(uc, tax, uce) {
 				//console.log("+ 30% 20%");
 				//BAJA +20% => 10%
 				//BAJA A 5%
-				return xuc * 1.1;
+				return xuc * APP_CONFIG.RECARGO_TAXONOMIA_MEDIA;
 
 				break;
 
 			case "9":
 				//BAJA 15% => 10% presencialidad remota
 				//BAJA A 5%
-				return xuc * 1.15;
+				return xuc * APP_CONFIG.RECARGO_TAXONOMIA_ALTA;
 				break;
 
 			default:
@@ -550,10 +796,19 @@ function UCrecargo(uc, tax, uce) {
 	}
 }
 
+
+/**
+ * Motor financiero central: Consolida las UC base calculadas y procesa jerárquicamente todos los descuentos de negocio vigentes.
+ * Contempla descuentos transversales por sedes (Guayana, Los Teques), exoneraciones por carrera específica (Filosofía, Educación) y modelos limitados por porcentajes de cooperación económica.
+ * Determina separando lo que la beca abarca y los excedentes obligatorios.
+ * 
+ * @returns {void} Muta masivamente el estado de finanzas globales ('vrealUC', 'ucfuera', 'ucpagar', 'totalbs') e invoca a generarPagos().
+ */
 function totalizacion() {
 	vrealUC = valorUC;
 	let cobertura = cober / 100;
-	if (mode == "UC") {
+	if (mode == APP_CONFIG.MODO_UC) {
+		// En modo UC la cobertura representa descuento, por eso se paga el porcentaje restante.
 		cobertura = 1 - cober / 100;
 	}
 
@@ -563,10 +818,10 @@ function totalizacion() {
 	//descuentos segun carrera
 	if (carrera.includes("educacion") || carrera.includes("letras")) {
 		//Aplicamos 30% de descuento >>
-		vrealUC = valorUC * 0.7;
+		vrealUC = valorUC * APP_CONFIG.DESCUENTO_CARRERA_APOYO;
 	} else if (carrera.includes("filosofia")) {
 		//Aplicamos 60% de descuento >>
-		vrealUC = valorUC * 0.4;
+		vrealUC = valorUC * APP_CONFIG.DESCUENTO_FILOSOFIA;
 	}
 
 	//descuento por sede
@@ -585,7 +840,7 @@ function totalizacion() {
 			break;
 	}
 
-	//Recargo por taxonomia
+	// Recargo por taxonomia equivale a la diferencia entre UC academicas y UC cobradas.
 	let ucre = uctotal - ucbase;
 	//descuento por cooperacion
 	if (coop != "fab" && coop != "ninguna" && coop != "baup") {
@@ -596,14 +851,11 @@ function totalizacion() {
 		}
 
 		if (ucbase <= limit) {
-			// console.log("menor");
-			//por debajo de coobertura
-			//aplicamos %  a lo que queda
+			// Si las UC base no superan el limite, la ayuda cubre toda la base y solo quedan recargos fuera.
 			ucfuera = ucre;
 			ucpagar = ucbase * cobertura + ucre;
 		} else if (ucbase > limit) {
-			//console.log("mayor");
-			//por encima de cobertura
+			// Si supera el limite, el excedente se cobra completo y solo el limite recibe cobertura.
 			ucfuera = ucbase - limit + ucre;
 			ucpagar = ucbase - limit + ucre + limit * cobertura;
 		}
@@ -612,7 +864,7 @@ function totalizacion() {
 		if (ucbase <= limitFab) {
 			// console.log("menor fab");
 			//Por debajo
-			if (mode == "UC") {
+			if (mode == APP_CONFIG.MODO_UC) {
 				ucfuera = ucre;
 				ucpagar = ucbase * cobertura + ucre;
 			} else {
@@ -623,7 +875,7 @@ function totalizacion() {
 		} else {
 			//console.log("mayor fab");
 			//Por encima
-			if (mode == "UC") {
+			if (mode == APP_CONFIG.MODO_UC) {
 				ucfuera = ucbase - limitFab + ucre;
 				ucpagar = ucbase - limitFab + ucre + limitFab * cobertura;
 			} else {
@@ -670,13 +922,22 @@ function totalizacion() {
 		console.log("Total Minors bs*3: ", totalbsMinor * 3);
 	}
 
-	if (mode == "UC") {
+	if (mode == APP_CONFIG.MODO_UC) {
 		GenerarTabla();
 	} else {
 		loadMontosAcordion(ucrec, ucfuera);
 	}
 }
 
+
+/**
+ * Extrae o proyecta la tarifa de la UC vigente para una fecha exacta, tomando en cuenta las curvas de aumento de precios (variaciones).
+ * Imprescindible para el cálculo de cuotas proyectadas en meses futuros de un semestre.
+ * 
+ * @param {string} fecha - Fecha formato MM/DD/YYYY de la cual se desea conocer el valor de la UC.
+ * @param {number|null} force_periodo - (Opcional) Permite obligar la consulta sobre un periodo específico (1 para Verano, 2 para Semestre) ignorando la estacionalidad actual.
+ * @returns {string} El valor equivalente en divisas, parseado y fijado a 2 decimales (como string).
+ */
 function getUCfecha(fecha, force_periodo = null) {
 	let f = new Date(fecha);
 	let month = f.getMonth() + 1;
@@ -720,6 +981,14 @@ function getUCfecha(fecha, force_periodo = null) {
 	return Number(uc).toFixed(2);
 }
 
+
+/**
+ * Resuelve la tarifa de UC que aplica explícitamente a un mes (ej. la cuota del mes 4 tiene el aumento del mes 4).
+ * Funciona como atajo directo para plantillas modernas que se basan en el número de mes en lugar de fechas concretas.
+ * 
+ * @param {number} mes - Número representativo del mes en el semestre (ej. de 1 a 5).
+ * @returns {string} La tarifa monetaria base (en USD) correspondiente al mes, ajustada a 2 decimales.
+ */
 function getUCMes(mes) {
 	let month = mes;
 
@@ -738,6 +1007,13 @@ function getUCMes(mes) {
 	return Number(uc).toFixed(2);
 }
 
+
+/**
+ * Computa el monto final absoluto (en divisas) de una cuota de pago anclada a una fecha específica, aplicando transversalmente los descuentos de sede y carrera aprobados.
+ * 
+ * @param {string} fecha - Fecha en la que vence/aplica el pago.
+ * @returns {number} Monto final de la cuota con descuentos (listo para multiplicar por BCV o imprimir en USD).
+ */
 function GetMontoTarifa(fecha) {
 	let aux = ucpagar;
 
@@ -762,9 +1038,17 @@ function GetMontoTarifa(fecha) {
 	return getUCfecha(fecha) * aux;
 }
 
+
+/**
+ * Computa el monto final absoluto (en divisas) de una cuota de pago anclada a un mes específico de un periodo,
+ * descontando beneficios de sede o beneficios sociales (carrera). Es el núcleo del renderizado de las plantillas actuales.
+ * 
+ * @param {number} mes - Mes interno del periodo del cual se extrae la tarifa base.
+ * @returns {number} Monto financiero deducido aplicable a dicho mes (en divisas).
+ */
 function GetMontoTarifaMes(mes) {
 	let aux = ucpagar;
-	
+
 	//descuentos segun carrera
 	if (carrera.includes("educacion") || carrera.includes("letras")) {
 		aux *= 0.7;
@@ -790,6 +1074,15 @@ function GetMontoTarifaMes(mes) {
 	return getUCMes(mes) * aux;
 }
 
+
+/**
+ * Ensambla una fecha de consulta válida determinando si el mes buscado recae en el año natural actual o en el siguiente/anterior.
+ * Es vital para cálculos inter-anuales (ej. un semestre que inicia en Septiembre pero termina en Enero del año siguiente).
+ * 
+ * @param {number|string} dia - Día del corte.
+ * @param {number|string} mes - Mes del corte.
+ * @returns {string} Fecha cruda compatible con el objeto Date() de JS (MM/DD/YYYY).
+ */
 function getFechaAnoActual(dia, mes) {
 	//MM DD AAAA
 	//Enero/Febrero caso borde
@@ -808,8 +1101,16 @@ function getFechaAnoActual(dia, mes) {
 /* END SISTEMA GENERAL */
 
 /* SISTEMA DE MATERIAS */
+
+/**
+ * Controla el despliegue animado de las listas de materias clasificadas por semestre.
+ * Si el usuario se encuentra en la herramienta FAB, la selección del encabezado no colapsa, sino que elige masivamente dicho semestre.
+ * 
+ * @param {HTMLElement} elem - El div contenedor (collapsible) clicado por el usuario.
+ * @returns {void} Modifica las clases y los estilos 'display' del elemento contiguo.
+ */
 function toggleList(elem) {
-	if (mode == "UC") {
+	if (mode == APP_CONFIG.MODO_UC) {
 		elem.classList.toggle("active");
 		var content = elem.nextElementSibling;
 
@@ -830,16 +1131,37 @@ function toggleList(elem) {
 	}
 }
 
+
+/**
+ * Dibuja en la interfaz gráfica la sumatoria total de Unidades de Crédito académicas seleccionadas hasta el momento (incluyendo regulares y minors).
+ * 
+ * @returns {void} Actualiza la etiqueta del contador superior 'totalUC'.
+ */
 function actualizarTotalUC() {
 	document.getElementById("totalUC").innerHTML = `${baseVisual + ucbaseMinor} UC`;
 }
 
+
+/**
+ * Reinicia a cero los acumuladores visuales de Unidades de Crédito (Regulares y Minors) y actualiza la pantalla.
+ * 
+ * @returns {void} Modifica los contadores globales e invoca 'actualizarTotalUC()'.
+ */
 function limpiarTotalUC() {
 	baseVisual = 0;
 	ucbaseMinor = 0;
 	actualizarTotalUC();
 }
 
+
+/**
+ * Punto de entrada lógico cuando se hace clic (check/uncheck) en una materia del catálogo.
+ * Delega la acción concreta de añadir o restar al carrito de materias.
+ * 
+ * @param {HTMLInputElement} elem - Checkbox interactuado por el estudiante.
+ * @param {boolean} isMinor - Indica si pertenece a la malla de Minors o a la carrera base.
+ * @returns {void} Extrae el ID de la materia y decide llamar a 'addMateriaList' o 'deleteMateriaList'.
+ */
 function materiaSelect(elem, isMinor) {
 	//Verificamos si es true o false
 	let id = elem.getAttribute("id");
@@ -851,7 +1173,17 @@ function materiaSelect(elem, isMinor) {
 		deleteMateriaList(id, isMinor);
 	}
 }
+/** Acumulador de UC visuales que no afecta el valor logico base. */
 let baseVisual = 0;
+
+/**
+ * Inscribe una materia en el resumen o "carrito" visual y suma progresivamente su carga de Unidades de Crédito a los totales.
+ * Realiza la distinción entre UC académicas (las que valen en pénsum) y las equivalentes (las que se pagan con recargo).
+ * 
+ * @param {string|number} id - Posición de la materia dentro de la colección cargada.
+ * @param {boolean} isMinor - Diferenciador lógico para acumular en la bolsa de Minors separada.
+ * @returns {void} Dibuja la fila visual HTML, registra el evento en Analytics y acumula las 'uctotal'.
+ */
 function addMateriaList(id, isMinor) {
 	let data = materias[id];
 
@@ -861,9 +1193,8 @@ function addMateriaList(id, isMinor) {
 	divC.classList.add("container", id);
 	divC.setAttribute("onclick", `desCheckMatList(${id}, ${isMinor});`);
 
-	divC.innerHTML = `<table><tr><td class="nMat"> <span style="color: red;">X</span> ${data.Asignatura}</td><td> ${
-		data.UC != 0 ? data.UC : data.UCE
-	} UC</td></tr><tr><td>${data.Semestre}</td><td> ${data.Tax}</td></tr></table>`;
+	divC.innerHTML = `<table><tr><td class="nMat"> <span style="color: red;">X</span> ${data.Asignatura}</td><td> ${data.UC != 0 ? data.UC : data.UCE
+		} UC</td></tr><tr><td>${data.Semestre}</td><td> ${data.Tax}</td></tr></table>`;
 
 	main.appendChild(divC);
 
@@ -885,6 +1216,14 @@ function addMateriaList(id, isMinor) {
 	actualizarTotalUC();
 }
 
+
+/**
+ * Excluye una materia previamente agregada del carrito visual y descuenta exactamente las UC equivalentes que había aportado.
+ * 
+ * @param {string|number} id - Posición de la materia a desincorporar.
+ * @param {boolean} isMinor - Contexto (Malla regular vs Malla Minor).
+ * @returns {void} Localiza y destruye el elemento HTML en el DOM, reajusta las sumatorias financieras a la baja.
+ */
 function deleteMateriaList(id, isMinor) {
 	let elem = document.getElementsByClassName(id)[0];
 	elem.parentNode.removeChild(elem);
@@ -903,6 +1242,13 @@ function deleteMateriaList(id, isMinor) {
 	actualizarTotalUC();
 }
 
+
+/**
+ * Destruye por completo el DOM de la lista de materias agregadas (el carrito).
+ * Usado cuando el usuario cambia de sede o carrera y la proyección previa deja de ser válida.
+ * 
+ * @returns {void} Asigna un 'innerHTML' vacío al panel 'materias'.
+ */
 function cleanTableMat() {
 	document.getElementsByClassName("materias")[0].innerHTML = "";
 }
@@ -910,17 +1256,35 @@ function cleanTableMat() {
 
 /* SISTEMA TABLA */
 //SYSTEM TABLE
+/** Colores alternos usados para la generacion visual de las tablas de pagos. */
 let ColorArray = ["#fed20180", "#34b2e466"];
+/** Indicador de color alterno para el formato de celdas de las tablas de pagos. */
 let ScolorUsed = false;
 
+
+/**
+ * Controlador puente para la generación en bloque de todas las plantillas de pagos.
+ * En versiones heredadas llamaba a '_GenerarTabla', actualmente redirige a 'generarPagos' (plantillas nuevas) e inicializa los acordeones.
+ * 
+ * @returns {void} Encapsula la orquestación de renderizado visual final.
+ */
 function GenerarTabla() {
 	generarPagos();
 	iniciarlizarAcordionesPagos();
 }
 
+
+/**
+ * [LEGACY] Generador histórico de tablas de pago basadas en arreglos bidimensionales inyectados.
+ * Extrae la plantilla estructurada del archivo data y procesa filas planas o mixtas con rowspan/colspan dinámicos.
+ * (Conserva compatibilidad con semestres pasados muy antiguos).
+ * 
+ * @param {boolean} isMinor - Define qué contenedor destino se usará ('pagos' o 'pagoMinor') y qué plantilla de datos buscar.
+ * @returns {void} Manipula la capa DOM inyectando etiquetas 'table', 'tr' y 'th'.
+ */
 function _GenerarTabla(isMinor = false) {
 	//let tabla = tables[perioact];
-	//console.warn("isMinor? ", isMinor);
+	//console.warn("isMinor", isMinor);
 	if (uctotal > 0 || isMinor) {
 		let tabla;
 		let celmax;
@@ -930,14 +1294,14 @@ function _GenerarTabla(isMinor = false) {
 			tabla = templateTabla[templateSelectMinor];
 			celmax = tabla[0];
 
-			divTable = document.getElementById("pagoMinor");
+			divTable = document.getElementById(APP_CONFIG.ID_PAGO_MINOR);
 		} else {
 			//No Minors
 			tabla = templateTabla[templateSelect];
 			celmax = tabla[0];
 
-			divTable = document.getElementById("pagos");
-			document.getElementById("pagoMinor").innerHTML = "";
+			divTable = document.getElementById(APP_CONFIG.ID_PAGOS);
+			document.getElementById(APP_CONFIG.ID_PAGO_MINOR).innerHTML = "";
 		}
 
 		divTable.innerHTML = "";
@@ -974,6 +1338,14 @@ function _GenerarTabla(isMinor = false) {
 	}
 }
 
+
+/**
+ * [LEGACY] Fabrica una fila convencional de una tabla 2D inyectando el parseo de funciones matemáticas que hayan sido encapsuladas en la plantilla.
+ * 
+ * @param {Array} fila - Conjunto de celdas a imprimir en la fila actual.
+ * @param {number} celmax - Cantidad máxima teórica de celdas para el cálculo de anchuras proporcionales.
+ * @returns {HTMLElement} Elemento estructurado 'tr' con las celdas armadas.
+ */
 function GenColumnas(fila, celmax) {
 	let filaHTML = document.createElement("tr");
 
@@ -996,6 +1368,15 @@ function GenColumnas(fila, celmax) {
 	return filaHTML;
 }
 
+
+/**
+ * [LEGACY] Determina la extensión horizontal (ColSpan) de una celda para alinear y balancear automáticamente una tabla irregular.
+ * 
+ * @param {number} LongFila - Número de celdas total solicitadas en esta fila específica.
+ * @param {number} celmax - Tope o base geométrica de celdas de la tabla.
+ * @param {number} index - Posición de la celda iterada.
+ * @returns {number} Número de columnas HTML a ocupar.
+ */
 function GetColSpan(LongFila, celmax, index) {
 	//console.log('Long', LongFila);
 	if (LongFila == 1) {
@@ -1019,6 +1400,16 @@ function GetColSpan(LongFila, celmax, index) {
 	}
 }
 
+
+/**
+ * [LEGACY] Ensambla una matriz anidada y visualmente combinada (uso intensivo de rowSpan y colSpan).
+ * Usado tradicionalmente cuando una misma modalidad de pago se fragmenta en dos opciones de divisas o fechas.
+ * 
+ * @param {number} rowS - Extensión vertical inicial calculada.
+ * @param {Array} fmix - Matriz interna desglosada.
+ * @param {number} celmax - Referencia de ancho completo.
+ * @returns {HTMLElement} Colección de etiquetas TR agrupadas (dentro de tbody lógico) listas para inyectar.
+ */
 function GenFilaMix(rowS, fmix, celmax) {
 	let LongMainf;
 	let divAux = document.createElement("tbody");
@@ -1053,6 +1444,13 @@ function GenFilaMix(rowS, fmix, celmax) {
 	return divAux;
 }
 
+
+/**
+ * [LEGACY] Escáner y evaluador de macros. Busca el patrón "eval(..)" dentro de las celdas de plantillas prefabricadas para ejecutar llamadas financieras diferidas (ej. 'eval(GetMontoTarifa(...))').
+ * 
+ * @param {string} orig - Cadena de texto cruda desde el archivo de datos JSON.
+ * @returns {string} El string original resuelto, habiendo ejecutado Javascript nativo y reemplazado su bloque.
+ */
 function evaluar(orig) {
 	let text = orig;
 	let start = orig.search("eval");
@@ -1069,6 +1467,15 @@ function evaluar(orig) {
 	return text;
 }
 
+
+/**
+ * [LEGACY] Aplica estilización cebra (colores alternos) en las filas heredadas generadas por el motor antiguo, para asegurar que la visualización móvil se distinga.
+ * 
+ * @param {HTMLElement} elemt - Nodo de celda que recibirá formato directo en línea.
+ * @param {number} long - Cantidad de celdas; un comportamiento distinto si abarca toda la tabla.
+ * @param {number} ind - Posición inicial (columna 0 a veces se pinta con CSS duro y no con este script).
+ * @returns {void} Escribe la propiedad style.backgroundColor.
+ */
 function SetStyle(elemt, long, ind) {
 	if (long == 1) {
 		//Unico elemento
@@ -1097,11 +1504,21 @@ function SetStyle(elemt, long, ind) {
 3. Tiene Minior?
 */
 
+/** Factor de multiplicacion aplicado para reflejar el descuento por pago total (4% off). */
 const DESCUENTO_TOTAL = 0.96;
+/** Factor de multiplicacion aplicado para reflejar el descuento por pago parcial. */
 const DESCUENTO_PARCIAL = 0.96;
 
+
+/**
+ * Generador moderno de plantillas de pago (Sistema Actual).
+ * Inyecta una estructura estática HTML basada en clases CSS (Flexbox/Grid), resolviendo las estimaciones de pago Mensual y Financiamiento interno con recargos e intereses en el acto.
+ * Esta función omite la creación de tablas matriciales en favor de diseños más visuales tipo "Cards" de precios.
+ * 
+ * @returns {void} Aplica plantillas de String literals con resoluciones en crudo directo al DOM principal.
+ */
 function generarPagos() {
-	const divMain = document.getElementById("pagos");
+	const divMain = document.getElementById(APP_CONFIG.ID_PAGOS);
 	divMain.innerHTML = "";
 
 	//Tasa BCV
@@ -1164,44 +1581,8 @@ function generarPagos() {
                 </div>
             </div>-->
 
-            <!-- PAGO PARCIAL-->
-            <div class="box-btn">
-                PAGO PARCIAL
-                <i
-                    class="fas fa-question-circle"
-                    onclick="modalInfoOpen('Modalidad de pago de 3 meses por adelantado (1era cuota) y 2 meses posteriormente (2da cuota).<br>Recibe un 4% de descuento sobre las UC (No DI).<br>*Comprobar monto con caja*')"
-                ></i>
-            </div>
-            <div class="box-panel">
-                <div class="box-info">
-                    <div><span class="subtitle-table">1ERA CUOTA</span></div>
-                    <div class="indent-10">
-                        <span class="subtitle-table">Estudiante regular (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
-                       
-                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
-                    </div>
 
-                    <div class="indent-10">
-                        <span class="subtitle-table">Estudiante nuevo (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
-                      
-                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
-                    </div>
-                </div>
-                <div class="box-info">
-                    <div><span class="subtitle-table">2DA CUOTA (ESTIMACIÓN +CI)</span></div>
-                    <div class="indent-10">
-                        <span class="usd">${formatNumber.new(
-							2.5 * getUCMes(4) + Number(GetMontoTarifaMes(4)) * 2 * DESCUENTO_PARCIAL,
-							`USD `,
-							true
-						)}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGO FINANCIADO-->
+            <!-- PAGO MENSUAL (FINANCIADO)-->
             <div class="box-btn">
                 PAGO MENSUAL
                 <i
@@ -1249,7 +1630,44 @@ function generarPagos() {
                         <span class="usd">${formatNumber.new(GetMontoTarifaMes(5), `USD `, true)}</span>
                     </div>
                 </div>
-            </div>    
+            </div>   
+		
+			<!-- PAGO PARCIAL-->
+            <div class="box-btn">
+                PAGO PARCIAL (MODALIDAD DESHABILITADA) 
+                <i
+                    class="fas fa-question-circle"
+                    onclick="modalInfoOpen('Modalidad de pago de 3 meses por adelantado (1era cuota) y 2 meses posteriormente (2da cuota).<br>Recibe un 4% de descuento sobre las UC (No DI).<br>*Comprobar monto con caja*')"
+                ></i>
+            </div>
+            <div class="box-panel">
+                <div class="box-info">
+                    <div><span class="subtitle-table">1ERA CUOTA</span></div>
+                    <div class="indent-10">
+                        <span class="subtitle-table">Estudiante regular (+DI)</span><br />
+                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                       
+                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                    </div>
+
+                    <div class="indent-10">
+                        <span class="subtitle-table">Estudiante nuevo (+DI)</span><br />
+                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                      
+                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                    </div>
+                </div>
+                <div class="box-info">
+                    <div><span class="subtitle-table">2DA CUOTA (ESTIMACIÓN +CI)</span></div>
+                    <div class="indent-10">
+                        <span class="usd">${formatNumber.new(
+				2.5 * getUCMes(4) + Number(GetMontoTarifaMes(4)) * 2 * DESCUENTO_PARCIAL,
+				`USD `,
+				true
+			)}</span>
+                    </div>
+                </div>
+            </div> 
         `
 		);
 	} else {
@@ -1261,26 +1679,8 @@ function generarPagos() {
 		divMain.insertAdjacentHTML(
 			"beforeend",
 			`
-            <!-- PAGO PARCIAL-->
-            <div class="box-btn">
-                PAGO PARCIAL
-                <i
-                    class="fas fa-question-circle"
-                    onclick="modalInfoOpen('Modalidad de pago de 3 meses por adelantado (1era cuota) y 2 meses posteriormente (2da cuota).<br>Recibe un 4% de descuento sobre las UC (No DI).<br>*Comprobar monto con caja*')"
-                ></i>
-            </div>
-            <div class="box-panel">
-                <div class="box-info">
-                    <div><span class="subtitle-table">2DA CUOTA (+ CI)</span></div>
-                    <div class="indent-10">
-                    <span class="bs">${formatNumber.new((2.5 * valorUC + totalbs * 2 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
-                 
-                        <span class="usd">${formatNumber.new(2.5 * valorUC + totalbs * 2 * DESCUENTO_PARCIAL, `USD `, true)}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGO FINANCIADO-->
+            
+            <!-- PAGO MENSUAL (FINANCIADO)-->
             <div class="box-btn">
                 PAGO MENSUAL
                 <i
@@ -1308,6 +1708,25 @@ function generarPagos() {
                     </div>
                 </div>
             </div>   
+
+			<!-- PAGO PARCIAL-->
+            <div class="box-btn">
+                PAGO PARCIAL (MODALIDAD DESHABILITADA)
+                <i
+                    class="fas fa-question-circle"
+                    onclick="modalInfoOpen('Modalidad de pago de 3 meses por adelantado (1era cuota) y 2 meses posteriormente (2da cuota).<br>Recibe un 4% de descuento sobre las UC (No DI).<br>*Comprobar monto con caja*')"
+                ></i>
+            </div>
+            <div class="box-panel">
+                <div class="box-info">
+                    <div><span class="subtitle-table">2DA CUOTA (+ CI)</span></div>
+                    <div class="indent-10">
+                    <span class="bs">${formatNumber.new((2.5 * valorUC + totalbs * 2 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                 
+                        <span class="usd">${formatNumber.new(2.5 * valorUC + totalbs * 2 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                    </div>
+                </div>
+            </div>
         `
 		);
 	}
@@ -1415,7 +1834,12 @@ function generarPagos() {
 	}
 }
 
-//Return html con valores de tasa BCV
+
+/**
+ * Genera el componente visual (banner) que muestra la cotización oficial del dólar BCV empleada en la liquidación del día.
+ * 
+ * @returns {string} Código HTML (String literal) de la tarjeta con la tasa de cambio formateada.
+ */
 function getBCVhtml() {
 	return `
     <!-- TASA -->
@@ -1427,7 +1851,13 @@ function getBCVhtml() {
     `;
 }
 
-//Retorna html de DI
+
+/**
+ * Genera la tarjeta informativa de los costos extra-académicos correspondientes al Derecho de Inscripción (DI).
+ * Imprime dos montos separados: Uno para estudiantes regulares y otro para estudiantes de nuevo ingreso, que difieren históricamente en aranceles.
+ * 
+ * @returns {string} Código HTML inyectable con los montos absolutos en Bs y USD formateados según la UC base.
+ */
 function getDIhtml() {
 	return `
     <!-- DI -->
@@ -1454,7 +1884,13 @@ function getDIhtml() {
     `;
 }
 
-//Retorna html de confimracion de DI
+
+/**
+ * Genera la tarjeta visual correspondiente al segundo recargo semestral llamado 'Confirmación de Inscripción'.
+ * Se calcula usando la UC inflada proyectada hacia el cuarto mes del semestre activo, por regla de negocio institucional.
+ * 
+ * @returns {string} Código HTML inyectable con el monto de confirmación estimado formateado.
+ */
 function getConfDIhtml() {
 	return `
     <!-- DI -->
@@ -1471,3 +1907,6 @@ function getConfDIhtml() {
     </div>  
     `;
 }
+
+
+

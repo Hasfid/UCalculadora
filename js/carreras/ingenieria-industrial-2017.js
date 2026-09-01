@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var ingindustrial = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Fundamentos de Ingeniería Industrial", UC: 5, Tax: "TA‐4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Matemática Básica", UC: 7, Tax: "TA‐6" },
@@ -104,6 +110,7 @@ var ingindustrial = [
 	{ Semestre: "[Anual]DÉCIMO SEMESTRE", Asignatura: "GESTIÓN DE CAPITAL HUMANO", UC: 4, Tax: "TA‐1" },
 ];
 
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var ingindustrialnuevo = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Principios de Marketing", UC: 5, Tax: "TA-1" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Introducción a la Ingeniería", UC: 3, Tax: "TA-4" },

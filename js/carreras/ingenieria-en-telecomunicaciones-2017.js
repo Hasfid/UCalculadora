@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var ingentelecomunicaciones = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Geometría Plana y Trigonometría", UC: 5, Tax: "TA‐6" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Matemática Básica", UC: 7, Tax: "TA‐6" },
@@ -81,6 +87,7 @@ var ingentelecomunicaciones = [
 	{ Semestre: "DECIMO SEMESTRE", Asignatura: "Trabajo de Grado", UC: 5.25, Tax: "TA‐1" },
 ];
 
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var ingentelecomunicacionesnuevo = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Algebra y Trigonometría", UC: 5, Tax: "TA‐4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Cálculo Diferencial", UC: 6, Tax: "TA‐4" },

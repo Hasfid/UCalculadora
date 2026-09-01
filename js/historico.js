@@ -1,3 +1,21 @@
+/**
+ * @file historico.js
+ * @description Módulo encargado de la visualización gráfica e histórica del valor de la Unidad de Crédito (UC).
+ * Utiliza la librería externa Chartist para renderizar una gráfica lineal mostrando la evolución del precio de la UC en divisas a lo largo del tiempo.
+ * Contiene las configuraciones estéticas y responsivas de la gráfica para adaptarse a distintas resoluciones de pantalla.
+ */
+/**
+ * Configuracion del grafico historico de UC.
+ * Actualizar labels y series cuando se agreguen nuevos valores anuales o mensuales.
+ */
+const HISTORICO_UC_CONFIG = {
+	/** Selector del contenedor Chartist donde se renderiza el historico. */
+	CHART_SELECTOR: ".ct-chart",
+	/** Padding derecho del grafico para evitar corte visual de etiquetas. */
+	CHART_PADDING_RIGHT: 10
+};
+
+/** Opciones responsivas de Chartist. Actualmente quedan vacias y los bloques antiguos se conservan comentados al final conceptual del arreglo. */
 let responsiveOptions = [
 	/*  [
         "screen and (max-width: 640px)",
@@ -39,7 +57,7 @@ let responsiveOptions = [
 ];
 
 new Chartist.Line(
-	".ct-chart",
+	HISTORICO_UC_CONFIG.CHART_SELECTOR,
 	{
 		labels: [
 			"mar-20",
@@ -71,7 +89,7 @@ new Chartist.Line(
 	},
 	{
 		chartPadding: {
-			right: 10,
+			right: HISTORICO_UC_CONFIG.CHART_PADDING_RIGHT,
 		},
 		/*axisY: {
             offset: 50,

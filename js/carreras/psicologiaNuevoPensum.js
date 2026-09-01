@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var psicologianuevopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Competencia Textual en Español 1", UC: 3, Tax: "TA-6" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Fundamentos Epistemológicos y Antropológicos de la Psicología", UC: 2, Tax: "TA-1" },

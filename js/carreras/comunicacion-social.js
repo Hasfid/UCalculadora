@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var comunicacionsocialanteriorpensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Competencia Textual en Español", UC: 5, Tax: "TA-6" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Fundamentos de Gramática", UC: 5, Tax: "TA-4" },
@@ -141,6 +147,7 @@ var comunicacionsocialanteriorpensum = [
 	{ Semestre: "CONCENTRACIÓN PERIODISMO SEMESTRE B", Asignatura: "Trabajo Final de la Concentración Periodismo", UC: 6, Tax: "TA-9" },
 ];
 
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var comunicacionsocial = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Comunicación Audiovisual", UC: 4, Tax: "TA-4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Comunicación 360", UC: 4, Tax: "TA-4" },

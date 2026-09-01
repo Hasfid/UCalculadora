@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var contaduria = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Blockchain y Criptoactivos", UC: 3, Tax: "TA‐3" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Teoría Contable", UC: 5, Tax: "TA‐1" },

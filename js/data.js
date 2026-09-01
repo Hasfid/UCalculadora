@@ -1,26 +1,53 @@
+/**
+ * @file data.js
+ * @description Repositorio central de datos y diccionarios de UCalculadora.
+ * Define la estructura de los periodos académicos, diccionarios de meses, las tasas históricas y proyecciones del valor de la UC, 
+ * así como los montos de derechos de inscripción, confirmación e hitos de variación por mes.
+ * También almacena los arreglos con las materias de los programas tipo "Minor".
+ */
+/**
+ * Parametros de derecho de inscripcion
+ * Estos valores se expresan en UC y afectan directamente los bloques de pago inicial.
+ * Para mantenimiento, actualizarlos cuando una circular oficial cambie los montos de estudiante regular, nuevo o confirmacion.
+ */
 const DI_REGULAR = 6;
 const DI_NUEVO = 10;
 const DI_CONFIRM = 2.5;
 
+/**
+ * Periodo academico activo
+ * 1 representa verano y 2 representa semestre.
+ * La interfaz cambia este valor desde los botones de periodo antes de recalcular pagos.
+ */
 let perioact = 0;
 
+/**
+ * Valores UC por periodo
+ * base es el valor usado cuando no hay variacion mensual.
+ * variacion define el valor UC de cada mes del semestre y alimenta getUCfecha y getUCMes.
+ */
 let ucByPeriodo = {
 	verano: {
 		base: 21,
 	},
-	/** Monto UC*/
+	/** Monto UC mensual del semestre vigente. */
 	semestre: {
 		base: 21,
 		variacion: [
-			21, //Mes 1
-			21,
-			21,
-			21,
-			21, //Mes 5
+			21, // Mes 1 del semestre
+			21, // Mes 2 del semestre
+			21, // Mes 3 del semestre
+			21, // Mes 4 del semestre
+			21, // Mes 5 del semestre
 		],
 	},
 };
 
+/**
+ * Mapeo de mes calendario a cuota academica
+ * Los meses null no tienen cuota semestral directa.
+ * Este mapa permite calcular pagos de marzo a julio y septiembre a enero con la misma logica.
+ */
 let monthMapping = {
 	1: 5,
 	2: null,
@@ -35,28 +62,12 @@ let monthMapping = {
 	11: 3,
 	12: 4,
 };
-/*{
-	1: 5,
-	2: null,
-	3: 1,
-	4: 2,
-	5: 3,
-	6: 4,
-	7: 5,
-	8: null,
-	9: 1,
-	10: 2,
-	11: 3,
-	12: 4,
-};*/
 
-//periodo guia
-// 2018191 inicia en 2018 y termina en 2019 primera mitad
-// 2018192
-// 119 intensivo 1 en 2019
-// 219
-// 2019191 inicia en 2019 y termina en 2019
-
+/**
+ * Historico de periodos antiguos
+ * Conserva bases y variaciones porcentuales usadas por tablas heredadas.
+ * No modificar salvo que se corrija un dato historico o se reactive una tabla antigua.
+ */
 let periodo = {
 	2018191: {
 		base: 130.0,
@@ -162,6 +173,7 @@ let periodo = {
 	},*/
 };
 /*
+// Plantillas historicas de tablas de pago. Mantener para compatibilidad aunque no todas se muestren actualmente.
 let tables = {
     2018191: [
         3,
@@ -338,6 +350,7 @@ let tables = {
 };
 */
 
+/** Plantillas vigentes de tablas de pago seleccionadas desde los botones de periodo. */
 let templateTabla = {
 	"1erMinor": [
 		3,

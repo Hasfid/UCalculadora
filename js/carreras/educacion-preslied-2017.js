@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var educacionpreslied = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Identidad Liderazgo y Compromiso", UC: 5, Tax: "(SP) TA‐1" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Psicología General y Desarrollo Humano (*)", UC: 5, Tax: "(SP) TA‐2" },

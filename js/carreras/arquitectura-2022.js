@@ -1,3 +1,9 @@
+/**
+ * Catalogo academico parametrizable de materias para esta carrera o programa.
+ * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
+ * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ */
+/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
 var arquitectura = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Taller de Proyectos 1", UC: 11, Tax: "TA‐8" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Cálculo Infinitesimal para Arquitectura ", UC: 5, Tax: "TA‐4" },
