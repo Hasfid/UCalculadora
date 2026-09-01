@@ -23,15 +23,16 @@ const DI_CONFIRM = 2.5;
 let perioact = 0;
 
 /**
- * Valores UC por periodo
- * base es el valor usado cuando no hay variacion mensual.
- * variacion define el valor UC de cada mes del semestre y alimenta getUCfecha y getUCMes.
+ * Precio de la UC en USD para cada periodo.
+ * - `base`: precio fijo de la UC.
+ * - `variacion`: precio de la UC por cada mes del semestre (5 meses).
+ * 
+ * Al salir nueva circular, cambiar los valores numéricos en base y variacion en caso de aplicar.
  */
 let ucByPeriodo = {
 	verano: {
 		base: 21,
 	},
-	/** Monto UC mensual del semestre vigente. */
 	semestre: {
 		base: 21,
 		variacion: [

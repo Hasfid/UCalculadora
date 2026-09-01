@@ -2,11 +2,13 @@
 <html lang="es-ES">
 
 <head>
+	<!-- SEO y configuración base -->
 	<meta charset="UTF-8" />
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=no" />
 	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
+	<!-- PWA Manifest -->
 	<link rel="manifest" href="manifest.json" />
 	<meta name="description"
 		content="Calculadora de matricula UCAB no-oficial, para nuevo sistema de matricula por Unidades Crédito. Hecho por Miguel De Olim" />
@@ -25,6 +27,7 @@
 		gtag("config", "UA-33542195-1");
 	</script>
 
+	<!-- PWA: Iconos y metadatos de instalación -->
 	<meta name="apple-mobile-web-app-title" content="UCalculadora" />
 	<meta name="application-name" content="UCalculadora" />
 	<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=QEJvoAgyeq" />
@@ -36,9 +39,11 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="theme-color" content="#ffffff" />
 
+	<!-- Open Graph y redes sociales -->
 	<meta property="og:image" content="icons/android-chrome-192x192.png" />
 	<meta name="twitter:image" content="icons/android-chrome-512x512.png" />
 
+	<!-- Hojas de estilo -->
 	<link rel="stylesheet" href="css/main.css" />
 	<!-- <link rel="stylesheet" href="css/tool.css"> -->
 	<link rel="stylesheet" href="css/menu.css" />
@@ -46,6 +51,7 @@
 	<link rel="stylesheet" href="css/fab.css" />
 	<link rel="stylesheet" href="css/chartist.min.css" />
 
+	<!-- Tipografía y FontAwesome -->
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet" />
 	<script defer src="https://use.fontawesome.com/releases/v5.6.3/js/solid.js"
 		integrity="sha384-F4BRNf3onawQt7LDHDJm/hwm3wBtbLIfGk1VSB/3nn3E+7Rox1YpYcKJMsmHBJIl"
@@ -54,6 +60,7 @@
 		integrity="sha384-treYPdjUrP4rW5q82SnECO7TPVAz4bpas16yuE9F5o7CeBn2YYw1yr5oC8s8Mf8t"
 		crossorigin="anonymous"></script>
 
+	<!-- Motor principal de cálculo -->
 	<script src="js/main.js?dev=173"></script>
 
 	<!-- Scripts de Configuración y Cálculo -->
@@ -272,7 +279,7 @@
 		</div>
 	</div>
 
-	<!-- COOPERACION MODAL -->
+	<!-- COOPERACIÓN MODAL: Ayudas económicas (Proporcional, Beca-Trabajo, FAB, BAUP) -->
 	<div id="coopModal" class="modal">
 		<!-- Modal content -->
 		<div class="modal-content">
@@ -325,6 +332,7 @@
 				</button>
 			</div>
 
+			<!-- Panel deslizante de porcentaje de cobertura (oculto hasta seleccionar tipo) -->
 			<div id="btnRgo" class="modal-body" style="display: none">
 				<h3>
 					<span id="tipoAyuda"></span>
@@ -343,6 +351,7 @@
 				<button onclick="coopSelect('m', -1)">APLICAR</button>
 			</div>
 
+			<!-- Pie informativo: topes de cobertura por tipo de ayuda -->
 			<div class="modal-footer">
 				<p>
 					Recuerda la cobertura máxima: <br />
@@ -355,7 +364,7 @@
 		</div>
 	</div>
 
-	<!-- MATERIAS MODAL -->
+	<!-- MATERIAS MODAL: Lista de materias generada dinámicamente por genMateriaList() -->
 	<div id="matModal" class="modal">
 		<!-- Modal content -->
 		<div class="modal-content">
@@ -374,7 +383,7 @@
 		</div>
 	</div>
 
-	<!-- INFO MODAL -->
+	<!-- INFO MODAL: Modal genérico para mensajes informativos (planes de pago, etc.) -->
 	<div id="infoModal" class="modal">
 		<!-- Modal content -->
 		<div class="modal-content">
@@ -389,7 +398,7 @@
 		</div>
 	</div>
 
-	<!-- HEADER -->
+	<!-- HEADER: Cabecera principal con logo, valor UC vigente y enlace a circular -->
 	<header class="emenu" style="display: none">
 		<h1>
 			<i class="fa bback" onclick="OpenDiv('menu')">&#xf060;</i>
@@ -419,7 +428,7 @@
 		</p>
 	</header>
 
-	<!-- MENU -->
+	<!-- MENÚ PRINCIPAL: Pantalla de inicio con las 3 opciones (Matrícula, Open Source, Histórico) -->
 	<div id="menu" class="onLoad emenu" style="display: none">
 		<a href="#" class="noUnder menu">
 			<div class="Dcalc" onclick="OpenDiv('ucalculadora')">
@@ -490,7 +499,7 @@
 		</a>
 	</div>
 
-	<!-- UCALCULADORA -->
+	<!-- UCALCULADORA: Vista principal del cálculo de matrícula (Sede > Carrera > Materias > Calcular) -->
 	<div class="ucalculadora emenu" style="display: none">
 		<!-- BOTONES -->
 
@@ -549,6 +558,7 @@
 		<br />
 		<br />
 
+		<!-- Contenedor de alertas dinámicas (ej. API BCV no disponible) -->
 		<div class="alert" id="alertmsg" style="display: none"></div>
 
 		<br />
@@ -602,7 +612,7 @@
 		<br />
 	</div>
 
-	<!-- TOOL PARA CALCULAR
+	<!-- TOOL PARA CALCULAR (DESHABILITADO): Calculadora numérica auxiliar
     <div class="tool emenu" style="display: none">
         <div class="panel">
             <div class="cal">0</div>
@@ -642,7 +652,7 @@
 
     </div>-->
 
-	<!-- DONACIONES CALCULADORA - FAB -->
+	<!-- FAB: Calculadora de donaciones del Programa Andrés Bello -->
 	<div class="fab emenu" style="display: none">
 		<!--CARRERA
 	<button class="ubtn" onclick="openCarrera()">
@@ -750,7 +760,7 @@
 		<br />
 	</div>
 
-	<!-- CONTRIBUCIONES OPEN SOURCE-->
+	<!-- CONTRIBUCIONES: Página Open Source con formas de colaborar y lista de colaboradores -->
 	<div class="contribuciones emenu" style="display: none">
 		<h1>Contribuciones</h1>
 
@@ -803,7 +813,7 @@
 			<h3>Reportes</h3>-->
 	</div>
 
-	<!--HISTORICO UC-->
+	<!-- HISTÓRICO UC: Tabla y gráfico con la evolución del valor de la UC desde 2018 -->
 	<div class="historico emenu" style="display: none">
 		<h2>Histórico UC</h2>
 		<div class="ct-chart"></div>
@@ -1182,6 +1192,7 @@
 		</table>
 	</div>
 
+	<!-- FOOTER: Contacto, redes sociales y versión -->
 	<footer style="display: none">
 		<div class="Dsocial">
 			<br />
@@ -1212,6 +1223,7 @@
 			<br />
 		</div>
 	</footer>
+	<!-- Scripts del gráfico histórico (cargados al final para no bloquear render) -->
 	<script src="js/chartist-js.min.js"></script>
 	<script src="js/historico.js"></script>
 </body>
