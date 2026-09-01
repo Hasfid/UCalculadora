@@ -61,8 +61,7 @@ self.addEventListener('fetch', function (event) {
   // console.log('[PWA] The service worker is serving the asset.');
   event.respondWith(checkResponse(event.request).catch(function () {
     return returnFromCache(event.request)
-  }
-  ));
+  }));
   event.waitUntil(addToCache(event.request));
 });
 
