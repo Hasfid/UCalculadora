@@ -187,7 +187,6 @@ function carreraSelect(elem, isMinor = false) {
 	//limpiamos texto
 	let content = elem.textContent.replace(/\n/g, "");
 	content = content.replace(/[.]/g, "");
-	content = content.replace(/[()]/g, "");
 	content = content.trim();
 	content = content.toUpperCase();
 
@@ -207,7 +206,7 @@ function carreraSelect(elem, isMinor = false) {
 	if (isMinor) {
 		carrera = "Minor";
 	} else {
-		carrera = content.replace(/\s/g, "").toLowerCase();
+		carrera = elem.value;
 	}
 	//console.log(carrera);
 

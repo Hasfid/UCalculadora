@@ -6,9 +6,9 @@
  * También se encarga de la generación dinámica de las tablas de pago (tanto regulares como minors),
  * el cálculo de tarifas, variaciones según periodos, y la inyección de los resultados en el DOM.
  */
-/* SISTEMA GENERAL */
+
+
 /**
- * CONFIGURACION PARAMETRIZABLE GENERAL
  * Esta seccion concentra valores que cambian por politica academica, sede, taxonomia, integraciones y elementos DOM.
  * Para mantenimiento, modificar primero estos parametros antes de tocar formulas dentro de funciones.
  */
@@ -30,11 +30,32 @@ const APP_CONFIG = {
 	LIMITE_FAB_UC: 30,
 
 	/**
-	 * Descuentos por carrera
+	 * Descuentos por carrera y sede
 	 * Estos factores reducen el valor real de la UC antes de calcular el monto final.
+	 * Se documenta explícitamente cómo se obtienen los valores numéricos:
+	 * - DESCUENTO_EDUCACION_LETRAS: 0.70 (Descuento del 30%, calculado como 1 - 0.30 = 0.70).
+	 * - DESCUENTO_FILOSOFIA: 0.40 (Descuento del 60%, calculado como 1 - 0.60 = 0.40).
+	 * - DESCUENTO_SEDE_GUAYANA: 0.95 (Descuento del 5%, calculado como 1 - 0.05 = 0.95).
+	 * - DESCUENTO_SEDE_TEQUES: 0.80 (Descuento del 20%, calculado como 1 - 0.20 = 0.80).
+	 * Fórmula matemática: vrealUC = valorUC * DESCUENTO
 	 */
-	DESCUENTO_CARRERA_APOYO: 0.7,
+	DESCUENTO_EDUCACION_LETRAS: 0.7,
 	DESCUENTO_FILOSOFIA: 0.4,
+	DESCUENTO_SEDE_GUAYANA: 0.95,
+	DESCUENTO_SEDE_TEQUES: 0.8,
+
+	/**
+	 * Descuentos por modalidad de pago (Financiamiento)
+	 * Reducen el costo de las UC cobradas dependiendo si el pago es al contado o fraccionado.
+	 * Se documenta explícitamente cómo se obtienen los valores numéricos:
+	 * - DESCUENTO_MODALIDAD_TOTAL: 0.96 (Esto representa un descuento del 4%, calculado como 1 - 0.04 = 0.96. Al multiplicar, reduce el total a pagar al 96%).
+	 * - DESCUENTO_MODALIDAD_PARCIAL: 0.96 (Esto representa un descuento del 4%, calculado como 1 - 0.04 = 0.96).
+	 * - DESCUENTO_MODALIDAD_MENSUAL: 1.0 (No hay descuento, multiplicador neutro).
+	 * Fórmula matemática: total = UC * valorBCV * DESCUENTO
+	 */
+	DESCUENTO_MODALIDAD_TOTAL: 0.96,
+	DESCUENTO_MODALIDAD_PARCIAL: 0.96,
+	DESCUENTO_MODALIDAD_MENSUAL: 1.0,
 
 	/**
 	 * Valores de taxonomias y modalidad
@@ -48,7 +69,6 @@ const APP_CONFIG = {
 
 	/**
 	 * Integraciones externas
-	 * URL_BCV alimenta los montos en bolivares de las tablas visibles.
 	 */
 	URL_BCV: "https://madot10.github.io/bot-dolar-bcv/uctoday.json",
 
@@ -62,7 +82,6 @@ const APP_CONFIG = {
 };
 
 /**
- * ESTADO GLOBAL DE CALCULO
  * Estas variables se comparten entre main.js, modals.js, fab.js, data.js y plantillas HTML heredadas.
  * No renombrarlas sin actualizar llamadas onclick y referencias desde plantillas evaluadas.
  */
@@ -105,7 +124,6 @@ let templateSelectMinor = "";
 
 /** Textos informativos reutilizados por modales de ayuda de la interfaz. */
 let infoTXT = `Materias Semi-Presenciales como electivas pueden variar su modalidad (TAXONOMIA) <br> Las materias de Comprensión de Contenidos en Inglés y Producción de Contenidos en Inglés aunque no aparezca el cambio en la malla curricular, el cambio de taxonomía de T6 a TA8 afecta a todos los alumnos <br> <a href="https://www.ucab.edu.ve/informacion-institucional/secretaria/servicios/plan-de-estudios/"> <br> Más información de pensums </a>`;
-//FUNCIONES
 
 
 /**
@@ -141,7 +159,7 @@ function initVar(md) {
 	actualizarTotalUC();
 
 	if (md == "FAB") {
-		//Codigo desactivado por autoridades
+		// Código desactivado por directiva
 		mode = APP_CONFIG.MODO_FAB;
 
 		//sede
@@ -151,17 +169,16 @@ function initVar(md) {
 		//coop
 		//coop = 'fab';
 		//cober = 10; //min
-
-		// Log original mantenido para depuración de estados (Mantenimiento)
+		
 		console.log("inicializando FAB");
 	} else {
 		mode = APP_CONFIG.MODO_UC;
-		//Volvemos sede text a la normalidad
+		// Restaura el texto de sede a su estado original
 		let span = document.getElementById("sName");
 		let parentElem = span.parentElement;
 		span.innerHTML = "SEDE";
 		parentElem.children[2].style.display = "block";
-		// Log original mantenido para depuración de estados (Mantenimiento)
+		
 		console.log("inicializando UC");
 	}
 }
@@ -174,7 +191,7 @@ function initVar(md) {
  * @returns {void} No retorna valor explícito, configura los estados iniciales, oculta el cargador y muestra el menú principal.
  */
 window.onload = () => {
-	//Cargamos UC visual
+	// Carga la Unidad de Crédito (UC) visual
 	InicializarPeriodoSys();
 	LoadUC();
 
@@ -189,9 +206,9 @@ window.onload = () => {
 
 	initAccordion();
 
-	//ocultamos loader
+	// Oculta el indicador de carga de la interfaz
 	document.getElementsByClassName("loader")[0].style.display = "none";
-	//Mostramos menu y footer
+	// Muestra el menú principal y el pie de página
 	document.getElementById("menu").style.display = "block";
 	document.getElementsByTagName("footer")[0].style.display = "block";
 
@@ -223,7 +240,7 @@ function iniciarlizarAcordionesPagos() {
 	}
 }
 
-/* SISTEMA PERIODO TABLA*/
+/* Gestión de periodos */
 
 /**
  * Inicializa la lógica de selección de periodos académicos (semestre regular, verano, etc), filtrando opciones.
@@ -269,7 +286,7 @@ function InicializarPeriodoSys(perioObligatorio = 0) {
 		//console.log(idBTN, codeGen, periodoName);
 		//console.warn("codeGen", codeGen);
 
-		//Comprobar existencia del codigo en data.js ~ UC anunciada para periodo
+		// Comprueba la existencia del código en la configuración para validar la UC anunciada
 		if (ucByPeriodo[periodoName]) {
 			some_active = true;
 
@@ -322,14 +339,14 @@ function showPeriodo() {
  * @returns {void} Actualiza banderas globales, cambia el template heredado y dispara 'calcularMatricula()'.
  */
 function changePeriodo(idElem, newPeriodo) {
-	// Log original mantenido para seguimiento de cambios de estado (Mantenimiento)
 	console.info("#Periodo cambiado: ", newPeriodo);
-	//Activamos boton
+	
+	// Activa visualmente el botón seleccionado en la interfaz
 	if (perBtnActivo != "") document.getElementById(perBtnActivo).classList.remove("active");
 	perBtnActivo = idElem;
 	document.getElementById(idElem).classList.add("active");
 
-	//CAMBIO
+	// Actualiza la variable de periodo actual
 	perioact = newPeriodo;
 	templateSelect = document.getElementById(idElem).dataset.table;
 	templateSelectMinor = document.getElementById(idElem).dataset.minor;
@@ -349,10 +366,10 @@ function getActualPeriodo() {
 	let month = f.getMonth() + 1;
 
 	if (monthMapping[month] != null) {
-		//semestre
+		// Semestre regular
 		return 2;
 	} else {
-		//verano
+		// Verano
 		return 1;
 	}
 }
@@ -366,10 +383,10 @@ function getActualPeriodo() {
  */
 function getPeriodoCode(Nbtn) {
 	if (Nbtn == 0) {
-		//verano
+		// Verano
 		return 1;
 	} else {
-		//semestre
+		// Semestre regular
 		return 2;
 	}
 }
@@ -383,10 +400,10 @@ function getPeriodoCode(Nbtn) {
  */
 function getPeriodoName(Nbtn) {
 	if (Nbtn == 0) {
-		//verano
+		// Verano
 		return "verano";
 	} else {
-		//semestre
+		// Semestre regular
 		return "semestre";
 	}
 }
@@ -402,40 +419,37 @@ function getPeriodoName(Nbtn) {
  */
 function genPeriodoCode(Nper, Nbtn) {
 	if (Nper == 1) {
-		//PERIODO 1
-		//Verano (cada 4 btn)Per1
+		// PERIODO 1
+		// Verano del periodo 1
 		if (Nbtn % 3 == 0) {
 			return `${Nbtn / 3 + 1}${hoy.getFullYear() % 100}`;
 		} else {
-			//Sem 1 = Part 1 y 2
+			// Semestre regular del periodo 1
 			return `${hoy.getFullYear()}${hoy.getFullYear() % 100}${Nbtn}`;
 		}
 	} else {
-		//PERIODO 2 ~ Cambio de year ~ Enero condicion
-		// variable de modo
+		// Condición de enero para el cambio de año en periodo 2
 		let Kyear = 0;
 		if (hoy.getMonth() < 2) {
 			Kyear = -1;
 		}
 
-		//Verano (cada 4 btn)Per1
+		// Verano del periodo 2
 		if (Nbtn % 3 == 0) {
 			if (Nbtn == 0) {
-				//Ver anterior
+				// Retorna el año anterior
 				return `2${(hoy.getFullYear() + Kyear) % 100}`;
 			} else {
-				//Ver next year
+				// Retorna el año siguiente
 				return `1${(hoy.getFullYear() + (1 + Kyear)) % 100}`;
 			}
 		} else {
-			//Sem 1 = Part 1 y 2
+			// Semestre regular del periodo 2
 			return `${hoy.getFullYear() + Kyear}${((hoy.getFullYear() + Kyear) % 100) + 1}${Nbtn}`;
 		}
 	}
 }
-/* END SISTEMA PERIODO TABLA*/
-
-/* SISTEMA MENU */
+/* Navegación */
 
 /**
  * Coordinador central de la navegación tipo SPA (Single Page Application).
@@ -446,7 +460,7 @@ function genPeriodoCode(Nper, Nbtn) {
  */
 function OpenDiv(name) {
 	let elems_menu = document.getElementsByClassName("emenu");
-	//ocultamos todos
+	// Oculta todas las vistas antes de mostrar la solicitada
 	for (let elem of elems_menu) {
 		elem.style.display = "none";
 	}
@@ -498,9 +512,7 @@ function OpenDiv(name) {
 	}
 }
 
-/* END SISTEMA MENU*/
-
-/* SISTEMA GENERAL */
+/* Utilidades generales */
 
 //Google analytics togle
 
@@ -532,8 +544,7 @@ function setGa(value) {
  * @returns {void} Llama al objeto global gtag push de Google.
  */
 function OnClickGa(act, typeInter, lb) {
-	//si existe etiqueta hacer:
-	//console.log('LB', lb)
+	// Registra el evento con etiqueta si se proporciona
 	if (lb) {
 		//console.log('enter');
 		gtag("event", act, {
@@ -627,13 +638,9 @@ let formatNumber = {
  * @returns {number} Retorna el monto base monetizado (en divisas) y paralelamente lo actualiza en la variable global 'visualUC' y 'valorUC'.
  */
 function LoadUC() {
-	//let dataux = periodo[perioact];
-	//console.warn("LoadUC perioact: ", perioact);
-	//let dataux = perioact == 1 usando verano y en caso contrario semestre;
-	//let uc = dataux.base;
 	uc = getUCfecha(hoy, perioact);
 	valorUC = uc;
-	//Recorremos si existe lista de variacion
+	// Recorre la lista de variación si se encuentra definida
 	/*
 		if(dataux.variacion){
 			let timecmp;
@@ -656,8 +663,6 @@ function LoadUC() {
 	return uc;
 }
 
-//Encargado de obtener valor BCV
-
 /**
  * Se conecta con la API externa del bot BCV para consultar asincrónicamente el valor oficial del dólar de hoy.
  * 
@@ -674,8 +679,6 @@ function GetValorBCV() {
 		});
 }
 
-//Retorna jsonData de carrera
-
 /**
  * Transforma un texto genérico de carrera ingresado por UI (con espacios, mayúsculas, etc.) en un objeto de datos JSON oficial de malla curricular.
  * Busca la equivalencia en el objeto global de variables cargadas en memoria.
@@ -688,14 +691,10 @@ function GetJsonDataMaterias(tx) {
 	tx = tx.replace(/\n/g, "");
 	tx = tx.toLowerCase();
 
-	// Log original para validación de transformaciones de texto (Mantenimiento)
 	console.log("GetJsonDataMaterias", tx);
 
-	//console.log("TX " + tx);
 	return (tx = window[tx]);
 }
-
-//Arregla uc cambiado en el archivo debido al V y SP
 
 /**
  * Ajusta la cantidad de UC académicas que un estudiante "paga" cuando la modalidad no es tradicional.
@@ -710,8 +709,7 @@ function FixUC(taxNum, ucnum) {
 
 	if (taxNum) {
 		if (taxNum.includes("(V)") || taxNum.includes("(SP)")) {
-			//si es una modalida sp y v
-			//descontamos el 0.72
+			// Aplica descuento a materias de modalidad Semipresencial y Virtual
 			let k = Number(ucnum) * APP_CONFIG.FACTOR_UC_MODALIDAD_VIRTUAL;
 			//console.log("K2 " + k);
 			return Math.round(k);
@@ -746,17 +744,7 @@ function UCrecargo(uc, tax, uce) {
 		xuc = uc;
 	}
 	if (tax.includes("(V)") || tax.includes("(SP)")) {
-		// Las modalidades virtuales y semipresenciales ya llegan ajustadas desde la data academica.
-		//if (taxN == "7" || taxN == "8" || taxN == "9") {
-		//Recargo 20%
-		//return uc * 1.2;
-		//}
-		//ya DB incluye recargo pro virtual
-		//+40% =>> 30%
-		//BAJ +30% => +20%
-		//return uc * 1.1;
-		//BAJ +20% => +10%
-		//BAJA 5$
+		// Las modalidades virtuales y semipresenciales ya llegan ajustadas desde la base de datos
 		return xuc * 1.0;
 	} else {
 		switch (taxN) {
@@ -766,24 +754,18 @@ function UCrecargo(uc, tax, uce) {
 			case "4":
 			case "5":
 			case "6":
-				//sin recargo
-				//console.log("sin recargo");
+				// Sin recargo
 				return xuc;
 				break;
 
 			case "7":
 			case "8":
-				//+ 30% => 20%
-				//console.log("+ 30% 20%");
-				//BAJA +20% => 10%
-				//BAJA A 5%
+				// Aplica recargo de taxonomía media
 				return xuc * APP_CONFIG.RECARGO_TAXONOMIA_MEDIA;
-
 				break;
 
 			case "9":
-				//BAJA 15% => 10% presencialidad remota
-				//BAJA A 5%
+				// Aplica recargo de taxonomía alta
 				return xuc * APP_CONFIG.RECARGO_TAXONOMIA_ALTA;
 				break;
 
@@ -799,8 +781,12 @@ function UCrecargo(uc, tax, uce) {
 
 /**
  * Motor financiero central: Consolida las UC base calculadas y procesa jerárquicamente todos los descuentos de negocio vigentes.
- * Contempla descuentos transversales por sedes (Guayana, Los Teques), exoneraciones por carrera específica (Filosofía, Educación) y modelos limitados por porcentajes de cooperación económica.
- * Determina separando lo que la beca abarca y los excedentes obligatorios.
+ * El proceso sigue este orden matemático y lógico:
+ * 1. Inicializa el valor real de la UC (vrealUC) con la tarifa del día.
+ * 2. Multiplica vrealUC por el factor correspondiente si la carrera tiene un beneficio (ej. Educación = vrealUC * 0.70).
+ * 3. Multiplica vrealUC por el factor de sede si aplica (ej. Guayana = vrealUC * 0.95).
+ * 4. Separa las UC base académicas de los excedentes por recargos de Taxonomía.
+ * 5. Aplica la cobertura de becas o cooperación (ej. Proporcional al 30%) asegurando que el estudiante solo pague el 70% restante de las UC cubiertas por el límite. Todo excedente o recargo se cobra al 100%.
  * 
  * @returns {void} Muta masivamente el estado de finanzas globales ('vrealUC', 'ucfuera', 'ucpagar', 'totalbs') e invoca a generarPagos().
  */
@@ -815,36 +801,36 @@ function totalizacion() {
 	let ucfuera = 0;
 	ucpagar = 0;
 
-	//descuentos segun carrera
+	// Aplica descuentos según la carrera
 	if (carrera.includes("educacion") || carrera.includes("letras")) {
-		//Aplicamos 30% de descuento >>
-		vrealUC = valorUC * APP_CONFIG.DESCUENTO_CARRERA_APOYO;
+		// Aplica 30% de descuento
+		vrealUC = valorUC * APP_CONFIG.DESCUENTO_EDUCACION_LETRAS;
 	} else if (carrera.includes("filosofia")) {
-		//Aplicamos 60% de descuento >>
+		// Aplica 60% de descuento
 		vrealUC = valorUC * APP_CONFIG.DESCUENTO_FILOSOFIA;
 	}
 
-	//descuento por sede
+	// Aplica descuentos por sede
 	switch (sede) {
 		case "g":
 			//Guayana 5% descuento
 			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
-			vrealUC *= 0.95;
+			vrealUC *= APP_CONFIG.DESCUENTO_SEDE_GUAYANA;
 
 			break;
 		case "tq":
 			//Los teques 20% descuento
 			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
-			vrealUC *= 0.8;
+			vrealUC *= APP_CONFIG.DESCUENTO_SEDE_TEQUES;
 
 			break;
 	}
 
 	// Recargo por taxonomia equivale a la diferencia entre UC academicas y UC cobradas.
 	let ucre = uctotal - ucbase;
-	//descuento por cooperacion
+	// Aplica descuentos por cooperación
 	if (coop != "fab" && coop != "ninguna" && coop != "baup") {
-		//Beca o Prop
+		// Beca o proporcional
 		let limit = limitBeca;
 		if (coop != "beca") {
 			limit = limitProp;
@@ -860,35 +846,33 @@ function totalizacion() {
 			ucpagar = ucbase - limit + ucre + limit * cobertura;
 		}
 	} else if (coop != "ninguna" && coop != "baup") {
-		//FAB
+		// Fondo de Apoyo Beca (FAB)
 		if (ucbase <= limitFab) {
-			// console.log("menor fab");
-			//Por debajo
+			// UC base menor o igual al límite FAB
 			if (mode == APP_CONFIG.MODO_UC) {
 				ucfuera = ucre;
 				ucpagar = ucbase * cobertura + ucre;
 			} else {
 				ucfuera = ucre;
-				ucrec = ucre; //Recargo por tax
+				ucrec = ucre; // Recargo por taxonomía
 				ucpagar = ucbase * cobertura;
 			}
 		} else {
-			//console.log("mayor fab");
-			//Por encima
+			// UC base por encima del límite FAB
 			if (mode == APP_CONFIG.MODO_UC) {
 				ucfuera = ucbase - limitFab + ucre;
 				ucpagar = ucbase - limitFab + ucre + limitFab * cobertura;
 			} else {
 				ucfuera = ucbase - limitFab + ucre;
 				ucrec = ucre;
-				ucpagar = limitFab * cobertura; //Solamente lo dentro del limite
+				ucpagar = limitFab * cobertura; // Aplica cobertura solamente dentro del límite
 			}
 		}
 	} else if (coop == "baup") {
-		//Beca a Un Pana
+		// Beca a Un Pana (BAUP)
 		ucpagar = uctotal * cobertura;
 	} else {
-		//ninguna cooperacion
+		// Ninguna cooperación
 		ucpagar = uctotal;
 	}
 
@@ -903,7 +887,7 @@ function totalizacion() {
 	totalbs = Number(ucpagar * vrealUC).toFixed(2);
 	totalbsMinor = Number(uctotalMinor * vrealUC).toFixed(2);
 
-	//DEBUG
+	// Muestra log de depuración en entorno local
 	if (window.location.hostname == "127.0.0.1") {
 		console.warn("FINAL: ");
 		console.log("Cobertura: ", cobertura);
@@ -923,7 +907,7 @@ function totalizacion() {
 	}
 
 	if (mode == APP_CONFIG.MODO_UC) {
-		GenerarTabla();
+		generarPagos();
 	} else {
 		loadMontosAcordion(ucrec, ucfuera);
 	}
@@ -942,15 +926,13 @@ function getUCfecha(fecha, force_periodo = null) {
 	let f = new Date(fecha);
 	let month = f.getMonth() + 1;
 
-	//console.warn("-getUCfecha: perioact / month", perioact, month);
-	//If the month is a verano, set auxiliar periodo to verano
+	// Establece periodo auxiliar a verano si el mes actual es verano
 	aux_periodo = force_periodo == null ? (monthMapping[month] == null ? 1 : 2) : force_periodo;
-	let dataux = ucByPeriodo[aux_periodo == 1 ? "verano" : "semestre"]; //perioact
+	let dataux = ucByPeriodo[aux_periodo == 1 ? "verano" : "semestre"];
 	let uc = dataux?.base;
 
-	//console.log("perioact", perioact, "month", month, "monthMapping", monthMapping[month]);
 	if (aux_periodo != 1) {
-		//semestre
+		// Semestre regular
 		let cuotaIndex = monthMapping[month];
 		if (cuotaIndex == null) {
 			uc = dataux?.base;
@@ -995,9 +977,8 @@ function getUCMes(mes) {
 	let dataux = ucByPeriodo[perioact == 1 ? "verano" : "semestre"];
 	let uc = dataux.base;
 
-	//console.log("perioact", perioact, "month", month, "monthMapping", month);
 	if (perioact != 1) {
-		//semestre
+		// Semestre regular
 		uc = dataux.variacion[month - 1];
 	}
 
@@ -1019,19 +1000,19 @@ function GetMontoTarifa(fecha) {
 
 	//descuentos segun carrera
 	if (carrera.includes("educacion") || carrera.includes("letras")) {
-		aux *= 0.7;
+		aux *= APP_CONFIG.DESCUENTO_EDUCACION_LETRAS;
 	} else if (carrera.includes("filosofia")) {
-		aux *= 0.4;
+		aux *= APP_CONFIG.DESCUENTO_FILOSOFIA;
 	}
 
 	switch (sede) {
 		case "g":
 			//Guayana 5% descuento
-			aux *= 0.95;
+			aux *= APP_CONFIG.DESCUENTO_SEDE_GUAYANA;
 			break;
 		case "tq":
 			//Los teques 20% descuento
-			aux *= 0.8;
+			aux *= APP_CONFIG.DESCUENTO_SEDE_TEQUES;
 			break;
 	}
 
@@ -1051,22 +1032,22 @@ function GetMontoTarifaMes(mes) {
 
 	//descuentos segun carrera
 	if (carrera.includes("educacion") || carrera.includes("letras")) {
-		aux *= 0.7;
+		aux *= APP_CONFIG.DESCUENTO_EDUCACION_LETRAS;
 	} else if (carrera.includes("filosofia")) {
-		aux *= 0.4;
+		aux *= APP_CONFIG.DESCUENTO_FILOSOFIA;
 	}
 
 	switch (sede) {
 		case "g":
 			//Guayana 5% descuento
 			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
-			aux *= 0.95;
+			aux *= APP_CONFIG.DESCUENTO_SEDE_GUAYANA;
 
 			break;
 		case "tq":
 			//Los teques 20% descuento
 			//document.getElementById("info2").innerHTML = "*¡Aplicado descuento del 20% de la sede!* <br>";
-			aux *= 0.8;
+			aux *= APP_CONFIG.DESCUENTO_SEDE_TEQUES;
 
 			break;
 	}
@@ -1084,11 +1065,8 @@ function GetMontoTarifaMes(mes) {
  * @returns {string} Fecha cruda compatible con el objeto Date() de JS (MM/DD/YYYY).
  */
 function getFechaAnoActual(dia, mes) {
-	//MM DD AAAA
-	//Enero/Febrero caso borde
+	// Maneja el caso borde interanual de enero y febrero
 	let Kyear = 0;
-	//Mes partida ano pasado y Mes destino next => +1
-	//Mes partida next y Mes destino pasado => -1
 	if (hoy.getMonth() + 1 >= 2 && mes <= 2) {
 		Kyear = 1;
 	} else if (hoy.getMonth() + 1 < 2 && mes > 2) {
@@ -1098,9 +1076,7 @@ function getFechaAnoActual(dia, mes) {
 	return `${mes}/${dia}/${hoy.getFullYear() + Kyear}`;
 }
 
-/* END SISTEMA GENERAL */
-
-/* SISTEMA DE MATERIAS */
+/* Gestión de materias */
 
 /**
  * Controla el despliegue animado de las listas de materias clasificadas por semestre.
@@ -1120,8 +1096,7 @@ function toggleList(elem) {
 			content.style.display = "block";
 		}
 	} else {
-		//actua como seleccionador de semestre en FAB mode
-		//console.log(elem.innerHTML.trim());
+		// Actúa como seleccionador de semestre en el modo FAB
 		FAB_STATE.sem = elem.innerHTML.trim();
 		document.getElementById("sSem").innerHTML = FAB_STATE.sem;
 
@@ -1163,13 +1138,13 @@ function limpiarTotalUC() {
  * @returns {void} Extrae el ID de la materia y decide llamar a 'addMateriaList' o 'deleteMateriaList'.
  */
 function materiaSelect(elem, isMinor) {
-	//Verificamos si es true o false
+	// Verifica el estado del checkbox
 	let id = elem.getAttribute("id");
 	if (elem.checked) {
-		//activado
+		// Agrega la materia si está activada
 		addMateriaList(id, isMinor);
 	} else {
-		//desactivado >> eliminar
+		// Elimina la materia si está desactivada
 		deleteMateriaList(id, isMinor);
 	}
 }
@@ -1252,9 +1227,7 @@ function deleteMateriaList(id, isMinor) {
 function cleanTableMat() {
 	document.getElementsByClassName("materias")[0].innerHTML = "";
 }
-/* END SISTEMA DE MATERIAS */
-
-/* SISTEMA TABLA */
+/* Generación de tablas */
 //SYSTEM TABLE
 /** Colores alternos usados para la generacion visual de las tablas de pagos. */
 let ColorArray = ["#fed20180", "#34b2e466"];
@@ -1263,267 +1236,22 @@ let ScolorUsed = false;
 
 
 /**
- * Controlador puente para la generación en bloque de todas las plantillas de pagos.
- * En versiones heredadas llamaba a '_GenerarTabla', actualmente redirige a 'generarPagos' (plantillas nuevas) e inicializa los acordeones.
+ * Generador principal de plantillas de pago (Sistema Actual).
+ * Inyecta una estructura estática HTML basada en clases CSS, calculando in situ (en el acto) el monto en dólares y bolívares de cada cuota.
+ * El cálculo toma los subtotales globales y le agrega el factor de modalidad de pago (descuentos por financiamiento mensual, parcial o total) y el Derecho de Inscripción oficial.
  * 
- * @returns {void} Encapsula la orquestación de renderizado visual final.
- */
-function GenerarTabla() {
-	generarPagos();
-	iniciarlizarAcordionesPagos();
-}
-
-
-/**
- * [LEGACY] Generador histórico de tablas de pago basadas en arreglos bidimensionales inyectados.
- * Extrae la plantilla estructurada del archivo data y procesa filas planas o mixtas con rowspan/colspan dinámicos.
- * (Conserva compatibilidad con semestres pasados muy antiguos).
- * 
- * @param {boolean} isMinor - Define qué contenedor destino se usará ('pagos' o 'pagoMinor') y qué plantilla de datos buscar.
- * @returns {void} Manipula la capa DOM inyectando etiquetas 'table', 'tr' y 'th'.
- */
-function _GenerarTabla(isMinor = false) {
-	//let tabla = tables[perioact];
-	//console.warn("isMinor", isMinor);
-	if (uctotal > 0 || isMinor) {
-		let tabla;
-		let celmax;
-
-		let divTable;
-		if (isMinor) {
-			tabla = templateTabla[templateSelectMinor];
-			celmax = tabla[0];
-
-			divTable = document.getElementById(APP_CONFIG.ID_PAGO_MINOR);
-		} else {
-			//No Minors
-			tabla = templateTabla[templateSelect];
-			celmax = tabla[0];
-
-			divTable = document.getElementById(APP_CONFIG.ID_PAGOS);
-			document.getElementById(APP_CONFIG.ID_PAGO_MINOR).innerHTML = "";
-		}
-
-		divTable.innerHTML = "";
-		let tableHTML = document.createElement("table");
-		tableHTML.style = "overflow-x:auto;";
-		tableHTML.classList.add("tablaPagos");
-
-		//Recorremos para obtener FILAS
-		for (i = 1; i < tabla.length; i++) {
-			let fila = tabla[i];
-			//console.log('FILA ' + i)
-			let filaHTML;
-
-			if (!Number.isInteger(fila[0])) {
-				//Si no es fila mixta
-				filaHTML = GenColumnas(fila, celmax);
-			} else {
-				//Si es fila mixta
-				let fmix = fila.slice(1, fila.length);
-				let rspan = fila[0];
-
-				//console.log('Fila mix');
-				filaHTML = GenFilaMix(rspan, fmix, celmax);
-			}
-
-			tableHTML.appendChild(filaHTML);
-		}
-		divTable.appendChild(tableHTML);
-	}
-
-	//Generar Minor Table
-	if (!isMinor && uctotalMinor > 0) {
-		GenerarTabla(true);
-	}
-}
-
-
-/**
- * [LEGACY] Fabrica una fila convencional de una tabla 2D inyectando el parseo de funciones matemáticas que hayan sido encapsuladas en la plantilla.
- * 
- * @param {Array} fila - Conjunto de celdas a imprimir en la fila actual.
- * @param {number} celmax - Cantidad máxima teórica de celdas para el cálculo de anchuras proporcionales.
- * @returns {HTMLElement} Elemento estructurado 'tr' con las celdas armadas.
- */
-function GenColumnas(fila, celmax) {
-	let filaHTML = document.createElement("tr");
-
-	for (j = 0; j < fila.length; j++) {
-		//Obtenemos cada columna
-		let celda = fila[j];
-		let LongFilAc = fila.length;
-
-		let celdaHTML = document.createElement("th");
-
-		celdaHTML.colSpan = GetColSpan(LongFilAc, celmax, j);
-		SetStyle(celdaHTML, LongFilAc, j);
-		//let content = document.createTextNode(celda);
-		celdaHTML.innerHTML = evaluar(celda);
-		//celdaHTML.appendChild(content);
-
-		filaHTML.appendChild(celdaHTML);
-	}
-
-	return filaHTML;
-}
-
-
-/**
- * [LEGACY] Determina la extensión horizontal (ColSpan) de una celda para alinear y balancear automáticamente una tabla irregular.
- * 
- * @param {number} LongFila - Número de celdas total solicitadas en esta fila específica.
- * @param {number} celmax - Tope o base geométrica de celdas de la tabla.
- * @param {number} index - Posición de la celda iterada.
- * @returns {number} Número de columnas HTML a ocupar.
- */
-function GetColSpan(LongFila, celmax, index) {
-	//console.log('Long', LongFila);
-	if (LongFila == 1) {
-		//Elemento unico de la columna
-		return celmax;
-	} else if (LongFila == 2) {
-		//Solamente dos elementos
-		if (index == 0) {
-			//Primero sera 1
-			//console.log('Primero');
-			return 1;
-		} else {
-			//El segundo lo que queda
-			//console.log("celmax", celmax);
-			return celmax - 1;
-		}
-	} else {
-		//Mas de elementos mayores a las columnas maximas
-		//console.log("Mayores");
-		return 1;
-	}
-}
-
-
-/**
- * [LEGACY] Ensambla una matriz anidada y visualmente combinada (uso intensivo de rowSpan y colSpan).
- * Usado tradicionalmente cuando una misma modalidad de pago se fragmenta en dos opciones de divisas o fechas.
- * 
- * @param {number} rowS - Extensión vertical inicial calculada.
- * @param {Array} fmix - Matriz interna desglosada.
- * @param {number} celmax - Referencia de ancho completo.
- * @returns {HTMLElement} Colección de etiquetas TR agrupadas (dentro de tbody lógico) listas para inyectar.
- */
-function GenFilaMix(rowS, fmix, celmax) {
-	let LongMainf;
-	let divAux = document.createElement("tbody");
-	//console.log(fmix);
-
-	for (k = 0; k < fmix.length; k++) {
-		//Recorremos cada fila mixta
-		let fHTML = document.createElement("tr");
-
-		for (l = 0; l < fmix[k].length; l++) {
-			//Recorremos cada celda
-			let celdaHTML = document.createElement("th");
-			celdaCont = fmix[k][l];
-
-			LongMainf = fmix[k].length;
-
-			if (k == 0 && l == 0) {
-				//Si Estamos en el primer elmento de todo
-				celdaHTML.rowSpan = rowS;
-				SetStyle(celdaHTML, LongMainf, 0);
-			}
-			celdaHTML.colSpan = GetColSpan(LongMainf, celmax, l);
-
-			//let content = document.createTextNode(celdaCont);
-			celdaHTML.innerHTML = evaluar(celdaCont);
-			fHTML.appendChild(celdaHTML);
-		}
-
-		divAux.appendChild(fHTML);
-	}
-
-	return divAux;
-}
-
-
-/**
- * [LEGACY] Escáner y evaluador de macros. Busca el patrón "eval(..)" dentro de las celdas de plantillas prefabricadas para ejecutar llamadas financieras diferidas (ej. 'eval(GetMontoTarifa(...))').
- * 
- * @param {string} orig - Cadena de texto cruda desde el archivo de datos JSON.
- * @returns {string} El string original resuelto, habiendo ejecutado Javascript nativo y reemplazado su bloque.
- */
-function evaluar(orig) {
-	let text = orig;
-	let start = orig.search("eval");
-
-	if (start != -1) {
-		let end = orig.lastIndexOf(")");
-		let toEval = orig.substring(start, end + 1);
-
-		let ftPart = orig.substring(0, start);
-		let scPart = orig.substring(end + 1, orig.length);
-
-		text = ftPart + eval(toEval) + scPart + "";
-	}
-	return text;
-}
-
-
-/**
- * [LEGACY] Aplica estilización cebra (colores alternos) en las filas heredadas generadas por el motor antiguo, para asegurar que la visualización móvil se distinga.
- * 
- * @param {HTMLElement} elemt - Nodo de celda que recibirá formato directo en línea.
- * @param {number} long - Cantidad de celdas; un comportamiento distinto si abarca toda la tabla.
- * @param {number} ind - Posición inicial (columna 0 a veces se pinta con CSS duro y no con este script).
- * @returns {void} Escribe la propiedad style.backgroundColor.
- */
-function SetStyle(elemt, long, ind) {
-	if (long == 1) {
-		//Unico elemento
-		let a;
-		if (ScolorUsed) {
-			a = 1;
-			ScolorUsed = false;
-		} else {
-			a = 0;
-			ScolorUsed = true;
-		}
-		elemt.style = "background-color:" + ColorArray[a] + ";";
-	} else {
-		if (ind == 0) {
-			//si es el primero de varios
-			elemt.id = "tt";
-		}
-	}
-}
-
-/* END TABLA */
-
-/* NUEVO SISTEMA TEMPLATE 
-1. Get periodo
-2. Generar tabla
-3. Tiene Minior?
-*/
-
-/** Factor de multiplicacion aplicado para reflejar el descuento por pago total (4% off). */
-const DESCUENTO_TOTAL = 0.96;
-/** Factor de multiplicacion aplicado para reflejar el descuento por pago parcial. */
-const DESCUENTO_PARCIAL = 0.96;
-
-
-/**
- * Generador moderno de plantillas de pago (Sistema Actual).
- * Inyecta una estructura estática HTML basada en clases CSS (Flexbox/Grid), resolviendo las estimaciones de pago Mensual y Financiamiento interno con recargos e intereses en el acto.
- * Esta función omite la creación de tablas matriciales en favor de diseños más visuales tipo "Cards" de precios.
- * 
- * @returns {void} Aplica plantillas de String literals con resoluciones en crudo directo al DOM principal.
+ * @returns {void} Modifica directamente el div contenedor del DOM eliminando lo anterior y sobreescribiéndolo.
  */
 function generarPagos() {
 	const divMain = document.getElementById(APP_CONFIG.ID_PAGOS);
 	divMain.innerHTML = "";
 
+	// Extrae la tasa BCV y construye la fila informativa superior.
 	//Tasa BCV
 	divMain.insertAdjacentHTML("beforeend", getBCVhtml());
 
+	// La variable 'templateSelect' define la estructura a renderizar según el periodo:
+	// El verano procesa un pago único directo, mientras que el semestre despliega opciones financiadas.
 	//Segun periodo
 	if (templateSelect == "ver") {
 		//Verano
@@ -1546,10 +1274,14 @@ function generarPagos() {
 		);
 	} else if (templateSelect == "sem") {
 		//Semestre
+		// El semestre requiere un cobro inicial desglosado. El Derecho de Inscripción (DI) es fijo y se procesa de forma independiente.
+		// Se inyectan las plantillas informativas de DI y Confirmación de Inscripción (CI).
 		//DI
 		divMain.insertAdjacentHTML("beforeend", getDIhtml());
 		divMain.insertAdjacentHTML("beforeend", getConfDIhtml());
 
+		// Genera las tarjetas colapsables de pago.
+		// Procesa los totales aplicando descuentos por modalidad (total, mensual o parcial) directamente sobre las cuotas estimadas.
 		//PAGOS
 		divMain.insertAdjacentHTML(
 			"beforeend",
@@ -1566,17 +1298,17 @@ function generarPagos() {
                 <div class="box-info">
                     <div><span class="subtitle-table">Estudiante regular (+DI+CI)</span></div>
                     <div>
-                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 5 * DESCUENTO_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 5 * APP_CONFIG.DESCUENTO_MODALIDAD_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
                   
-                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 5 * DESCUENTO_TOTAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 5 * APP_CONFIG.DESCUENTO_MODALIDAD_TOTAL, `USD `, true)}</span>
                     </div>
                 </div>
                 <div class="box-info">
                     <div><span class="subtitle-table">Estudiante nuevo (+DI+CI)</span></div>
                     <div>
-                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 5 * DESCUENTO_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 5 * APP_CONFIG.DESCUENTO_MODALIDAD_TOTAL) * valorBCV, `Bs `, true)}</span> <br />
                     
-                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 5 * DESCUENTO_TOTAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 5 * APP_CONFIG.DESCUENTO_MODALIDAD_TOTAL, `USD `, true)}</span>
                     </div>
                 </div>
             </div>-->
@@ -1645,23 +1377,23 @@ function generarPagos() {
                     <div><span class="subtitle-table">1ERA CUOTA</span></div>
                     <div class="indent-10">
                         <span class="subtitle-table">Estudiante regular (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_REGULAR * valorUC + totalbs * 3 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
                        
-                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_REGULAR * valorUC + totalbs * 3 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL, `USD `, true)}</span>
                     </div>
 
                     <div class="indent-10">
                         <span class="subtitle-table">Estudiante nuevo (+DI)</span><br />
-                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                        <span class="bs">${formatNumber.new((DI_NUEVO * valorUC + totalbs * 3 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
                       
-                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 3 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(DI_NUEVO * valorUC + totalbs * 3 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL, `USD `, true)}</span>
                     </div>
                 </div>
                 <div class="box-info">
                     <div><span class="subtitle-table">2DA CUOTA (ESTIMACIÓN +CI)</span></div>
                     <div class="indent-10">
                         <span class="usd">${formatNumber.new(
-				2.5 * getUCMes(4) + Number(GetMontoTarifaMes(4)) * 2 * DESCUENTO_PARCIAL,
+				2.5 * getUCMes(4) + Number(GetMontoTarifaMes(4)) * 2 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL,
 				`USD `,
 				true
 			)}</span>
@@ -1721,9 +1453,9 @@ function generarPagos() {
                 <div class="box-info">
                     <div><span class="subtitle-table">2DA CUOTA (+ CI)</span></div>
                     <div class="indent-10">
-                    <span class="bs">${formatNumber.new((2.5 * valorUC + totalbs * 2 * DESCUENTO_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
+                    <span class="bs">${formatNumber.new((2.5 * valorUC + totalbs * 2 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL) * valorBCV, `Bs `, true)}</span> <br />
                  
-                        <span class="usd">${formatNumber.new(2.5 * valorUC + totalbs * 2 * DESCUENTO_PARCIAL, `USD `, true)}</span>
+                        <span class="usd">${formatNumber.new(2.5 * valorUC + totalbs * 2 * APP_CONFIG.DESCUENTO_MODALIDAD_PARCIAL, `USD `, true)}</span>
                     </div>
                 </div>
             </div>
@@ -1731,13 +1463,12 @@ function generarPagos() {
 		);
 	}
 
-	//Hay minior
+	// Renderiza tabla de minor si existen UC registradas
 	if (uctotalMinor > 0) {
 		divMain.insertAdjacentHTML("beforeend", `<h2>MINOR</h2>`);
 
 		if (templateSelectMinor == "verMinor") {
-			//Verano
-			//pago unico
+			// Renderiza el pago único para el verano minor
 			divMain.insertAdjacentHTML(
 				"beforeend",
 				`
@@ -1755,7 +1486,7 @@ function generarPagos() {
             `
 			);
 		} else if (templateSelectMinor == "semMinor") {
-			//Semestre
+			// Renderiza la tabla para semestre minor
 			divMain.insertAdjacentHTML(
 				"beforeend",
 				`
@@ -1807,7 +1538,7 @@ function generarPagos() {
             `
 			);
 		} else {
-			//Segunda parte semestre
+			// Renderiza la segunda parte del semestre minor
 			divMain.insertAdjacentHTML(
 				"beforeend",
 				`
@@ -1832,6 +1563,7 @@ function generarPagos() {
 			);
 		}
 	}
+	iniciarlizarAcordionesPagos();
 }
 
 

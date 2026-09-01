@@ -20,7 +20,7 @@
  */
 
 //2023 - 2026
-var inginformatica = [
+var inginformaticaviejopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Álgebra y Trigonometría", UC: 5, Tax: "TA-4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Lógica", UC: 4, Tax: "TA-4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Fundamentos de Programación", UC: 3, Tax: "TA-9" },
@@ -96,7 +96,7 @@ var inginformatica = [
  * @type {Array<{Semestre: string, Asignatura: string, UC: number, Tax: string}>}
  */
 //2026 - Actual
-var inginformaticanuevo = [
+var inginformaticanuevopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Álgebra y Trigonometría", UC: 5, Tax: "TA-4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Competencia Textual en Español", UC: 5, Tax: "TA-6" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Inglés", UC: 3, Tax: "TA-4" },

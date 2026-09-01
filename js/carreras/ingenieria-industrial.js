@@ -138,7 +138,7 @@ var ingindustrialviejopensum = [
  */
 
 //20.. - Actual
-var ingindustrialnuevo = [
+var ingindustrialnuevopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Principios de Marketing", UC: 5, Tax: "TA-1" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Introducción a la Ingeniería", UC: 3, Tax: "TA-4" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Álgebra y Trigonometría", UC: 5, Tax: "TA-4" },
