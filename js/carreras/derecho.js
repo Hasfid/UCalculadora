@@ -1,10 +1,26 @@
 /**
- * Catalogo academico parametrizable de materias para esta carrera o programa.
- * Cada objeto representa una materia mostrada por semestre con UC, taxonomia y posibles UC equivalentes.
- * Actualizar este arreglo cuando cambie el pensum oficial, cuidando que el nombre global coincida con la seleccion del HTML.
+ * @file derecho.js
+ * @description Define la estructura académica y la malla curricular de la carrera. 
+ * Contiene un arreglo de objetos donde cada elemento representa una asignatura específica, 
+ * detallando el semestre en el que se imparte, el nombre de la asignatura, las Unidades de Crédito (UC) 
+ * correspondientes y la taxonomía asociada. Es utilizado por el motor principal para generar 
+ * dinámicamente la lista de materias disponibles al momento de la selección en la interfaz.
  */
-/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
-var derecho = [
+
+
+/**
+ * Arreglo de objetos con el pensum de la carrera. 
+ * Para actualizar o realizar mantenimiento:
+ * 1. Mantener comentado el año o versión del pensum sobre la variable (ej. //202525 - Actual). Si no se conoce la fecha, colocar los primeros dígitos (ej. //202. - 202.).
+ * 2. Al actualizar, si no existe una variable llamada 'viejopensum' se debe crear siguiendo el flujo establecido. La variable del pensum viejo debe tomar los datos del pensum nuevo anterior, y la variable del pensum nuevo toma los datos del pensum recién aprobado.
+ * 3. Asegurar que las propiedades 'Semestre', 'Asignatura', 'UC' y 'Tax' mantengan la nomenclatura exacta.
+ * 4. Verificar que el identificador de la variable coincida exactamente con el valor esperado por la lógica de selección en la interfaz.
+ * 
+ * @type {Array<{Semestre: string, Asignatura: string, UC: number, Tax: string}>}
+ */
+
+//20..-202.
+var derechoviejopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Comprensión Lectora y Redacción", UC: 3, Tax: "TA‐8" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Orígenes del Derecho y Evolución Posterior", UC: 3, Tax: "TA‐1" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Teoría General del Derecho I", UC: 6, Tax: "TA‐1" },
@@ -62,7 +78,6 @@ var derecho = [
 	{ Semestre: "SEXTO SEMESTRE", Asignatura: "Fuentes de las Obligaciones", UC: 6, Tax: "TA‐1" },
 
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Innovación y Emprendimiento", UC: 3, Tax: "TA‐1" },
-
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Argumentación Jurídica", UC: 3, Tax: "TA‐4" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "(Virtual) Argumentación Jurídica", UC: 3, Tax: "(V) TA‐4" },
 	{ Semestre: "SÉPTIMO SEMESTRE", Asignatura: "Sociología Jurídica", UC: 3, Tax: "TA‐3" },
@@ -105,7 +120,18 @@ var derecho = [
 	{ Semestre: "DECIMO SEMESTRE", Asignatura: "Clínica Jurídica II", UC: 2, Tax: "TA‐9" },
 ];
 
-/** Variable global leida por GetJsonDataMaterias para cargar materias en pantalla. Mantener el identificador sincronizado con el valor de carrera en index.html. */
+/**
+ * Arreglo de objetos con el pensum de la carrera. 
+ * Para actualizar o realizar mantenimiento:
+ * 1. Mantener comentado el año o versión del pensum sobre la variable (ej. //202525 - Actual). Si no se conoce la fecha, colocar los primeros dígitos (ej. //202. - 202.).
+ * 2. Al actualizar, si no existe una variable llamada 'viejopensum' se debe crear siguiendo el flujo establecido. La variable del pensum viejo debe tomar los datos del pensum nuevo anterior, y la variable del pensum nuevo toma los datos del pensum recién aprobado.
+ * 3. Asegurar que las propiedades 'Semestre', 'Asignatura', 'UC' y 'Tax' mantengan la nomenclatura exacta.
+ * 4. Verificar que el identificador de la variable coincida exactamente con el valor esperado por la lógica de selección en la interfaz.
+ * 
+ * @type {Array<{Semestre: string, Asignatura: string, UC: number, Tax: string}>}
+ */
+
+//20... - Actual
 var derechonuevopensum = [
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Competencia Textual en Español", UC: 5, Tax: "TA‐6" },
 	{ Semestre: "PRIMER SEMESTRE", Asignatura: "Derecho Civil Personas", UC: 6, Tax: "TA‐1" },

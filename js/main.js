@@ -1122,8 +1122,8 @@ function toggleList(elem) {
 	} else {
 		//actua como seleccionador de semestre en FAB mode
 		//console.log(elem.innerHTML.trim());
-		sem = elem.innerHTML.trim();
-		document.getElementById("sSem").innerHTML = sem;
+		FAB_STATE.sem = elem.innerHTML.trim();
+		document.getElementById("sSem").innerHTML = FAB_STATE.sem;
 
 		delAllMaterias();
 		addAllMaterias();

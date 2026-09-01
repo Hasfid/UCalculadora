@@ -6,14 +6,19 @@
  * adicionales que apoyan el fondo de becas de la universidad.
  */
 
-/** Parametros de mantenimiento y estado global de este modulo propio de UCalculadora. */
-/** Semestre seleccionado en el flujo FAB. Modificar solo desde los controles de seleccion. */
-let sem;
-/** Monto adicional por recargos de taxonomia usado en donaciones FAB. */
-let recargo = 0;
-/** Monto fuera de cobertura calculado para FAB. */
-let outCober = 0;
 
+/**
+ * Define el estado global y los parámetros de mantenimiento del módulo FAB.
+ * Centraliza las variables mutables utilizadas durante el flujo de cálculo.
+ */
+let FAB_STATE = {
+    /** Almacena el semestre seleccionado en el flujo FAB. Modificar únicamente desde los controles de selección. */
+    sem: null,
+    /** Contiene el monto adicional por recargos de taxonomía usado en donaciones FAB. */
+    recargo: 0,
+    /** Representa el monto fuera de cobertura calculado para FAB. */
+    outCober: 0
+};
 
 /**
  * Calcula el monto estimado total en divisas de la donación para el Fondo de Apoyo Beca (FAB).
@@ -29,6 +34,7 @@ function totalizarDonacion() {
     //Cantidad de estudiantes
     let cantEst = document.getElementById("cantAlum").value;
 
+    // Calculo base del FAB: 5 meses de duracion promedio de un semestre por la cantidad de estudiantes y la cobertura deseada.
     document.getElementById("montoT").innerHTML = formatNumber.new(
         5 * cantEst * getUCfecha(getFistDayThisMonth()) * cobertura,
         "USD ",
@@ -185,13 +191,13 @@ let indiceFinal = 0;
 function addAllMaterias() {
     let found = false;
     for (let i = 0; i < materias.length; i++) {
-        if (materias[i].Semestre == sem) {
-            //Es de semestre buscado
+        if (materias[i].Semestre == FAB_STATE.sem) {
+            // Coincide con el semestre buscado
             indiceFinal = i;
             addMateriaList(i);
             found = true;
         } else if (found) {
-            //break al pasar todos los debidos
+            // Finaliza el ciclo al salir del bloque de materias del semestre deseado (asume agrupacion secuencial)
             break;
         }
     }
@@ -227,8 +233,9 @@ function loadMontosAcordion(recar, ocober) {
     //Cantidad de estudiantes
     let cantEst = document.getElementById("cantAlum").value;
 
-    recargo = recar * cantEst * 0.5;
-    outCober = ocober * cantEst * 0.5;
+    // Se aplica el factor 0.5 asumiendo la distribucion o politica especifica del FAB sobre costos compartidos
+    FAB_STATE.recargo = recar * cantEst * 0.5;
+    FAB_STATE.outCober = ocober * cantEst * 0.5;
 
     let spRecargo = document.getElementById("spRecarg");
     spRecargo.innerHTML = formatNumber.new(recar * vrealUC * cantEst * 0.5, "Bs.S ", true);
@@ -248,7 +255,7 @@ function loadMontosAcordion(recar, ocober) {
 function hideDonacion() {
     document.getElementsByClassName("totalizacion")[0].style.display = "none";
 }
-//
+
 // /**
 //  * [INACTIVO] Genera el cálculo final de la donación FAB validando el semestre y calculando recargos extras.
 //  * Se conserva como referencia técnica o posible integración futura de la modalidad detallada de donaciones.
@@ -256,23 +263,23 @@ function hideDonacion() {
 //  * @returns {void} Ejecuta la lógica base de totalización y muestra el panel visual de resultados.
 //  */
 // function generarDonacionCal(){
-//     if(!sem){
+//     if(!FAB_STATE.sem){
 //         alert("¡Debe seleccionar un semestre!");
 //     }else{
-//         //Capturamos cobertura del range
+//         // Captura la cobertura desde el control deslizante
 //         cober = document.getElementById("coopRangeFab").value;
 //
 //         totalizacion();
 //
-//         //Cantidad de estudiantes
+//         // Extrae la cantidad de estudiantes
 //         let cantEst = document.getElementById('cantAlum').value;
 //
+//         // Inyecta el monto total en el DOM (codigo original conservado)
 //         //document.getElementById('montoT').innerHTML = formatNumber.new(totalbs * cantEst * 0.5, 'Bs.S ', true);
 //         totalizarDonacion();
 //         document.getElementsByClassName("totalizacion")[0].style.display = 'block';
 //     }
 // }
-
 //
 // /**
 //  * [INACTIVO] Calcula el monto total estimado de donación FAB, integrando selectivamente montos adicionales (Derecho de Inscripción, Fuera de Cobertura o Recargos).
@@ -280,23 +287,24 @@ function hideDonacion() {
 //  * @returns {void} Inyecta el resultado final (sumatoria de base y adicionales ponderados) en el DOM.
 //  */
 // function totalizarDonacion(){
-//     //Cantidad de estudiantes
+//     // Extrae la cantidad de estudiantes
 //     let cantEst = document.getElementById('cantAlum').value;
 //     let adicional = 0;
 //
 //     if(document.getElementById("includeDI").checked){
-//         //Si incluir
+//         // Acumula el derecho de inscripcion
 //         adicional += periodo[perioact].di * cantEst;
 //     }
 //
 //     if(document.getElementById("includeOut").checked){
-//         //Si incluir
-//         adicional += outCober;
+//         // Acumula montos fuera de cobertura
+//         adicional += FAB_STATE.outCober;
 //     }else if(document.getElementById("includeRecargo").checked){
-//         //Si incluir
-//         adicional += recargo;
+//         // Acumula recargos por taxonomia
+//         adicional += FAB_STATE.recargo;
 //     }
 //
+//     // Inyecta el calculo definitivo en el DOM
 //     //console.log(adicional, adicional * vrealUC);
 //     document.getElementById('montoT').innerHTML = formatNumber.new( ((totalbs * 0.5 * cantEst) + (adicional * vrealUC)) , 'Bs.S ', true);
 // }
